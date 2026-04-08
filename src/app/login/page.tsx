@@ -1,6 +1,15 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function LoginChoicePage() {
+export default async function LoginChoicePage() {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    const role = (session.user as any).role;
+    redirect(role === "PROFESSIONAL" ? "/dashboard" : "/espace-client");
+  }
+
   return (
     <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
       <div className="w-full max-w-md">

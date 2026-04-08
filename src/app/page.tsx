@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 const features = [
   {
@@ -38,7 +41,13 @@ const categories = [
   "Spa & Beauté", "Boutique", "Pharmacie", "Et plus encore...",
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    const role = (session.user as any).role;
+    redirect(role === "PROFESSIONAL" ? "/dashboard" : "/espace-client");
+  }
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-white">
       {/* Nav */}
