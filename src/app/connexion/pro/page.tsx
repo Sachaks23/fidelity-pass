@@ -10,7 +10,6 @@ function ProLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -23,11 +22,6 @@ function ProLoginForm() {
       setError("Email ou mot de passe incorrect");
       setLoading(false);
     } else {
-      if (rememberMe) {
-        localStorage.setItem("fidco_pro_remember", JSON.stringify({ expires: Date.now() + 30 * 24 * 60 * 60 * 1000 }));
-      } else {
-        sessionStorage.setItem("fidco_pro_session", "1");
-      }
       window.location.href = "/go";
     }
   }
@@ -85,12 +79,7 @@ function ProLoginForm() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded accent-amber-400" />
-                <span className="text-slate-400 text-sm">Rester connecté</span>
-              </label>
+            <div className="flex items-center justify-end">
               <Link href="/mot-de-passe-oublie" className="text-amber-400 hover:text-amber-300 text-xs font-medium">
                 Mot de passe oublié ?
               </Link>

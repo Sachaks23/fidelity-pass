@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import PinGate from "@/components/PinGate";
-import { signOut } from "next-auth/react";
 import { useEffect } from "react";
 
 const tabs = [
@@ -21,22 +20,6 @@ export default function EspaceClientLayout({ children }: { children: React.React
   useEffect(() => {
     if (status === "unauthenticated") router.push("/connexion/client");
   }, [status, router]);
-
-  // Vérifie si "rester connecté" est actif, sinon déconnecte
-  useEffect(() => {
-    if (status !== "authenticated") return;
-    const session = sessionStorage.getItem("fidco_client_session");
-    if (session) return; // session en cours, OK
-    const rememberRaw = localStorage.getItem("fidco_client_remember");
-    if (rememberRaw) {
-      try {
-        const { expires } = JSON.parse(rememberRaw);
-        if (Date.now() < expires) return; // encore valide
-        localStorage.removeItem("fidco_client_remember");
-      } catch {}
-    }
-    signOut({ callbackUrl: "/connexion/client" });
-  }, [status]);
 
   if (status === "loading") {
     return (
