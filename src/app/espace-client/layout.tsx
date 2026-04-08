@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import PinGate from "@/components/PinGate";
 import { useEffect } from "react";
 
 const tabs = [
@@ -29,6 +30,7 @@ export default function EspaceClientLayout({ children }: { children: React.React
   }
 
   return (
+    <PinGate storageKey="client">
     <div className="min-h-screen bg-[#0f172a] flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-white/10 px-4 py-3 flex items-center justify-between bg-[#0f172a]/95 backdrop-blur-md">
@@ -70,5 +72,6 @@ export default function EspaceClientLayout({ children }: { children: React.React
         </div>
       </nav>
     </div>
+    </PinGate>
   );
 }

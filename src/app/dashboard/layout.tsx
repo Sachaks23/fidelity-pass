@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState, useEffect } from "react";
+import PinGate from "@/components/PinGate";
 
 const navItems = [
   { href: "/dashboard", label: "Vue d'ensemble", icon: "📊" },
@@ -46,6 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
+    <PinGate storageKey="pro">
     <div className="min-h-screen bg-[#0f172a] flex">
       {/* Overlay mobile */}
       {sidebarOpen && (
@@ -136,5 +138,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </main>
     </div>
+    </PinGate>
   );
 }
