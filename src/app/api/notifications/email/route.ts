@@ -48,10 +48,10 @@ export async function POST(req: NextRequest) {
     });
 
     const recipients = cards
-      .filter((c) => c.customer?.user?.email)
-      .map((c) => ({
-        email: c.customer.user.email!,
-        firstName: c.customer.firstName,
+      .filter((c: any) => c.customer?.user?.email)
+      .map((c: any) => ({
+        email: c.customer.user.email as string,
+        firstName: c.customer.firstName as string,
       }));
 
     if (recipients.length === 0) {
