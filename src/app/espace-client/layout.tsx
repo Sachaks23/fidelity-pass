@@ -33,8 +33,8 @@ export default function EspaceClientLayout({ children }: { children: React.React
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-white/10 px-4 py-3 flex items-center justify-between bg-[#0f172a]/95 backdrop-blur-md">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center text-black font-bold text-xs">FP</div>
-          <span className="font-bold text-white text-sm">Fidelity Pass</span>
+          <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center text-black font-bold text-xs">FC</div>
+          <span className="font-bold text-white text-sm">Fidco</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white text-xs font-bold">
