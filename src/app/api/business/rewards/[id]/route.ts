@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -11,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const business = await prisma.business.findUnique({ where: { userId } });
   if (!business) return NextResponse.json({ error: "Commerce introuvable" }, { status: 404 });
 
-  const reward = await prisma.reward.findUnique({ where: { id: params.id } });
+  const reward = await prisma.reward.findUnique({ where: { id } });
   if (!reward || reward.businessId !== business.id) {
     return NextResponse.json({ error: "Récompense introuvable" }, { status: 404 });
   }
@@ -19,7 +20,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const { name, description, pointsRequired, isActive } = await req.json();
 
   const updated = await prisma.reward.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       name: name?.trim() ?? reward.name,
       description: description?.trim() ?? reward.description,
@@ -31,7 +32,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -39,11 +41,11 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   const business = await prisma.business.findUnique({ where: { userId } });
   if (!business) return NextResponse.json({ error: "Commerce introuvable" }, { status: 404 });
 
-  const reward = await prisma.reward.findUnique({ where: { id: params.id } });
+  const reward = await prisma.reward.findUnique({ where: { id } });
   if (!reward || reward.businessId !== business.id) {
     return NextResponse.json({ error: "Récompense introuvable" }, { status: 404 });
   }
 
-  await prisma.reward.delete({ where: { id: params.id } });
+  await prisma.reward.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }
