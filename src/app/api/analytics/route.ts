@@ -55,8 +55,8 @@ export async function GET(request: NextRequest) {
   ]);
 
   // Group by day
-  const cardsByDay = groupByDay(allCards.map((c) => c.issuedAt));
-  const scansByDay = groupByDay(allScans.map((s) => s.scannedAt));
+  const cardsByDay = groupByDay(allCards.map((c: { issuedAt: Date }) => c.issuedAt));
+  const scansByDay = groupByDay(allScans.map((s: { scannedAt: Date }) => s.scannedAt));
 
   // Fill date gaps
   const newCustomers = fillDateGaps(cardsByDay, startDate, now);
