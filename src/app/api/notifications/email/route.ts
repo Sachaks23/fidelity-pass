@@ -7,9 +7,10 @@ import { sendBusinessNotification } from "@/lib/email";
 // GET — historique des emails envoyés
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const userId = (session?.user as any)?.id;
+  if (!userId) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const business = await prisma.business.findUnique({ where: { userId: session.user.id } });
+  const business = await prisma.business.findUnique({ where: { userId } });
   if (!business) return NextResponse.json({ error: "Commerce introuvable" }, { status: 404 });
 
   const emails = await prisma.emailNotification.findMany({
@@ -24,7 +25,8 @@ export async function GET() {
 // POST — envoyer un email à tous les clients
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const userId = (session?.user as any)?.id;
+  if (!userId) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   try {
     const { subject, message } = await req.json();
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Sujet et message requis" }, { status: 400 });
     }
 
-    const business = await prisma.business.findUnique({ where: { userId: session.user.id } });
+    const business = await prisma.business.findUnique({ where: { userId } });
     if (!business) return NextResponse.json({ error: "Commerce introuvable" }, { status: 404 });
 
     // Récupère tous les clients avec une carte active
