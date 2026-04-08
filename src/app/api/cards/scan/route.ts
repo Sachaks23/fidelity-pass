@@ -8,11 +8,14 @@ export async function POST(request: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const user = session.user as any;
-  const business = await prisma.business.findUnique({ where: { userId: user.id } });
+  const business = await prisma.business.findUnique({
+    where: { userId: user.id },
+    include: { rewards: { where: { isActive: true }, orderBy: { pointsRequired: "asc" } } },
+  });
   if (!business) return NextResponse.json({ error: "Commerce non trouvé" }, { status: 404 });
 
   const body = await request.json();
-  const { serialNumber } = body;
+  const { serialNumber, amount } = body;
 
   const card = await prisma.loyaltyCard.findUnique({
     where: { serialNumber },
@@ -23,38 +26,69 @@ export async function POST(request: NextRequest) {
   if (card.businessId !== business.id) return NextResponse.json({ error: "Carte invalide pour ce commerce" }, { status: 403 });
   if (!card.isActive) return NextResponse.json({ error: "Carte inactive" }, { status: 400 });
 
-  const newStampCount = card.stampCount + 1;
-  const rewardEarned = newStampCount >= business.stampsRequired;
+  // If no amount provided, just return customer info (step 1)
+  if (amount === undefined || amount === null) {
+    return NextResponse.json({
+      step: "info",
+      customerName: `${card.customer.firstName} ${card.customer.lastName}`,
+      serialNumber: card.serialNumber,
+      points: card.points,
+      totalPointsEarned: card.totalPointsEarned,
+    });
+  }
 
-  const updatedCard = await prisma.loyaltyCard.update({
+  const parsedAmount = parseFloat(amount);
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    return NextResponse.json({ error: "Montant invalide" }, { status: 400 });
+  }
+
+  // Calculate points earned
+  const pointsEarned = Math.round(parsedAmount * business.pointsPerEuro);
+  const newPoints = card.points + pointsEarned;
+  const newTotalPointsEarned = card.totalPointsEarned + pointsEarned;
+
+  // Find newly unlocked rewards
+  const previouslyUnlocked = business.rewards.filter((r) => r.pointsRequired <= card.points);
+  const nowUnlocked = business.rewards.filter((r) => r.pointsRequired <= newPoints);
+  const newlyUnlocked = nowUnlocked.filter(
+    (r) => !previouslyUnlocked.find((p) => p.id === r.id)
+  );
+
+  // Update card
+  await prisma.loyaltyCard.update({
     where: { id: card.id },
     data: {
-      stampCount: rewardEarned ? 0 : newStampCount,
-      totalStamps: { increment: 1 },
+      points: newPoints,
+      totalPointsEarned: newTotalPointsEarned,
       scanEvents: {
-        create: { businessId: business.id },
+        create: { businessId: business.id, amount: parsedAmount, pointsEarned },
       },
       transactions: {
         create: {
-          type: rewardEarned ? "REWARD" : "STAMP",
-          stampsDelta: 1,
-          note: rewardEarned ? `Récompense gagnée: ${business.rewardLabel}` : undefined,
+          type: "POINTS",
+          pointsDelta: pointsEarned,
+          amount: parsedAmount,
+          note: newlyUnlocked.length > 0
+            ? `Récompense débloquée : ${newlyUnlocked.map((r) => r.name).join(", ")}`
+            : undefined,
         },
       },
     },
-    include: {
-      customer: { include: { user: { select: { email: true } } } },
-    },
   });
+
+  // Find next reward
+  const nextReward = business.rewards.find((r) => r.pointsRequired > newPoints);
 
   return NextResponse.json({
     success: true,
-    rewardEarned,
-    stampCount: updatedCard.stampCount,
-    totalStamps: updatedCard.totalStamps,
+    step: "done",
     customerName: `${card.customer.firstName} ${card.customer.lastName}`,
-    message: rewardEarned
-      ? `Récompense débloquée ! ${business.rewardLabel}`
-      : `Tampon ajouté ! ${newStampCount}/${business.stampsRequired}`,
+    pointsEarned,
+    newPoints,
+    newlyUnlocked,
+    nextReward: nextReward ?? null,
+    message: newlyUnlocked.length > 0
+      ? `🎉 ${pointsEarned} points ajoutés ! Récompense débloquée : ${newlyUnlocked[0].name}`
+      : `⭐ ${pointsEarned} points ajoutés ! Total : ${newPoints} pts`,
   });
 }

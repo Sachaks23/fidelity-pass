@@ -19,6 +19,15 @@ const statements = [
   `CREATE TABLE IF NOT EXISTS "PushNotification" ("id" TEXT NOT NULL PRIMARY KEY, "businessId" TEXT NOT NULL, "title" TEXT NOT NULL, "body" TEXT NOT NULL, "sentAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "status" TEXT NOT NULL DEFAULT 'PENDING', "sentCount" INTEGER NOT NULL DEFAULT 0, CONSTRAINT "PushNotification_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE RESTRICT ON UPDATE CASCADE)`,
   `CREATE TABLE IF NOT EXISTS "EmailNotification" ("id" TEXT NOT NULL PRIMARY KEY, "businessId" TEXT NOT NULL, "subject" TEXT NOT NULL, "body" TEXT NOT NULL, "sentAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "sentCount" INTEGER NOT NULL DEFAULT 0, "status" TEXT NOT NULL DEFAULT 'SENT', CONSTRAINT "EmailNotification_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE RESTRICT ON UPDATE CASCADE)`,
   `CREATE TABLE IF NOT EXISTS "PasswordResetToken" ("id" TEXT NOT NULL PRIMARY KEY, "email" TEXT NOT NULL, "token" TEXT NOT NULL, "expires" DATETIME NOT NULL, "used" INTEGER NOT NULL DEFAULT 0, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+  `CREATE TABLE IF NOT EXISTS "Reward" ("id" TEXT NOT NULL PRIMARY KEY, "businessId" TEXT NOT NULL, "name" TEXT NOT NULL, "description" TEXT, "pointsRequired" INTEGER NOT NULL, "isActive" INTEGER NOT NULL DEFAULT 1, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "Reward_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE RESTRICT ON UPDATE CASCADE)`,
+  // New columns (ALTER TABLE — ignored if column already exists)
+  `ALTER TABLE "Business" ADD COLUMN "pointsPerEuro" REAL NOT NULL DEFAULT 1.0`,
+  `ALTER TABLE "LoyaltyCard" ADD COLUMN "points" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "LoyaltyCard" ADD COLUMN "totalPointsEarned" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Transaction" ADD COLUMN "pointsDelta" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Transaction" ADD COLUMN "amount" REAL`,
+  `ALTER TABLE "ScanEvent" ADD COLUMN "amount" REAL`,
+  `ALTER TABLE "ScanEvent" ADD COLUMN "pointsEarned" INTEGER NOT NULL DEFAULT 0`,
   // Indexes
   `CREATE UNIQUE INDEX IF NOT EXISTS "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId")`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "Session_sessionToken_key" ON "Session"("sessionToken")`,

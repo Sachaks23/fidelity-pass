@@ -36,6 +36,7 @@ export async function PATCH(request: NextRequest) {
       cardAccentColor: body.cardAccentColor,
       stampsRequired: body.stampsRequired,
       rewardLabel: body.rewardLabel,
+      ...(body.pointsPerEuro !== undefined && { pointsPerEuro: parseFloat(body.pointsPerEuro) }),
     },
   });
 

@@ -72,6 +72,7 @@ model Business {
   cardAccentColor String   @default("#e94560")
   stampsRequired  Int      @default(10)
   rewardLabel     String   @default("Récompense offerte")
+  pointsPerEuro   Float    @default(1.0)
   description     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -81,6 +82,7 @@ model Business {
   scanEvents         ScanEvent[]
   notifications      PushNotification[]
   emailNotifications EmailNotification[]
+  rewards            Reward[]
 }
 
 model Customer {
@@ -98,15 +100,17 @@ model Customer {
 }
 
 model LoyaltyCard {
-  id           String   @id @default(cuid())
-  businessId   String
-  customerId   String
-  serialNumber String   @unique @default(cuid())
-  stampCount   Int      @default(0)
-  totalStamps  Int      @default(0)
-  isActive     Boolean  @default(true)
-  issuedAt     DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String   @id @default(cuid())
+  businessId        String
+  customerId        String
+  serialNumber      String   @unique @default(cuid())
+  stampCount        Int      @default(0)
+  totalStamps       Int      @default(0)
+  points            Int      @default(0)
+  totalPointsEarned Int      @default(0)
+  isActive          Boolean  @default(true)
+  issuedAt          DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   business     Business      @relation(fields: [businessId], references: [id])
   customer     Customer      @relation(fields: [customerId], references: [id])
@@ -121,6 +125,8 @@ model Transaction {
   cardId      String
   type        String
   stampsDelta Int      @default(1)
+  pointsDelta Int      @default(0)
+  amount      Float?
   note        String?
   createdAt   DateTime @default(now())
 
@@ -128,13 +134,27 @@ model Transaction {
 }
 
 model ScanEvent {
-  id         String   @id @default(cuid())
-  businessId String
-  cardId     String
-  scannedAt  DateTime @default(now())
+  id           String   @id @default(cuid())
+  businessId   String
+  cardId       String
+  amount       Float?
+  pointsEarned Int      @default(0)
+  scannedAt    DateTime @default(now())
 
   business Business    @relation(fields: [businessId], references: [id])
   card     LoyaltyCard @relation(fields: [cardId], references: [id])
+}
+
+model Reward {
+  id             String   @id @default(cuid())
+  businessId     String
+  name           String
+  description    String?
+  pointsRequired Int
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
 }
 
 model PushSubscription {

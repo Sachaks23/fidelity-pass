@@ -3,11 +3,19 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 
+interface Reward {
+  id: string;
+  name: string;
+  description: string | null;
+  pointsRequired: number;
+  isActive: boolean;
+}
+
 interface LoyaltyCard {
   id: string;
   serialNumber: string;
-  stampCount: number;
-  totalStamps: number;
+  points: number;
+  totalPointsEarned: number;
   issuedAt: string;
   business: {
     name: string;
@@ -16,16 +24,9 @@ interface LoyaltyCard {
     cardBgColor: string;
     cardFgColor: string;
     cardAccentColor: string;
-    stampsRequired: number;
-    rewardLabel: string;
+    pointsPerEuro: number;
+    rewards: Reward[];
   };
-  transactions: Array<{
-    id: string;
-    type: string;
-    stampsDelta: number;
-    note: string | null;
-    createdAt: string;
-  }>;
 }
 
 function QRModal({ card, onClose }: { card: LoyaltyCard; onClose: () => void }) {
@@ -38,13 +39,9 @@ function QRModal({ card, onClose }: { card: LoyaltyCard; onClose: () => void }) 
         className="bg-[#1e293b] rounded-t-3xl w-full max-w-sm border-t border-x border-white/10 p-6 pb-10"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle bar */}
         <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-5" />
-
         <h3 className="text-white font-bold text-lg text-center mb-1">Votre QR code</h3>
         <p className="text-slate-400 text-sm text-center mb-5">{card.business.name}</p>
-
-        {/* QR code */}
         <div className="bg-white rounded-2xl p-5 flex flex-col items-center mb-4">
           <Image
             src={`/api/cards/${card.id}/qr`}
@@ -58,11 +55,9 @@ function QRModal({ card, onClose }: { card: LoyaltyCard; onClose: () => void }) 
             Présentez ce code en caisse
           </p>
         </div>
-
         <p className="text-slate-500 text-xs text-center mb-5">
           📸 Faites une capture d&apos;écran pour l&apos;avoir toujours sous la main
         </p>
-
         <button
           onClick={onClose}
           className="w-full py-3.5 rounded-2xl bg-white/10 text-white font-semibold hover:bg-white/15 transition-colors"
@@ -119,13 +114,12 @@ export default function MesCartesPage() {
       ) : (
         <div className="space-y-4">
           {cards.map((card) => {
-            const progress = (card.stampCount / card.business.stampsRequired) * 100;
-            const nearReward =
-              card.stampCount >= card.business.stampsRequired - 1 &&
-              card.stampCount < card.business.stampsRequired;
-
-            // Split stamps into rows of max 5
-            const stamps = Array.from({ length: card.business.stampsRequired });
+            const rewards = card.business.rewards;
+            const nextReward = rewards.find((r) => r.pointsRequired > card.points);
+            const unlockedRewards = rewards.filter((r) => r.pointsRequired <= card.points);
+            const progressToNext = nextReward
+              ? Math.min(100, (card.points / nextReward.pointsRequired) * 100)
+              : 100;
 
             return (
               <div
@@ -135,7 +129,7 @@ export default function MesCartesPage() {
                   background: `linear-gradient(135deg, ${card.business.cardBgColor}, ${card.business.cardBgColor}cc)`,
                 }}
               >
-                {/* Top bar: name + QR button */}
+                {/* Header */}
                 <div className="px-5 pt-5 flex items-start justify-between">
                   <div>
                     <p
@@ -144,22 +138,16 @@ export default function MesCartesPage() {
                     >
                       Carte de fidélité
                     </p>
-                    <p
-                      className="text-xl font-bold"
-                      style={{ color: card.business.cardFgColor }}
-                    >
+                    <p className="text-xl font-bold" style={{ color: card.business.cardFgColor }}>
                       {card.business.name}
                     </p>
                     {card.business.address && (
-                      <p
-                        className="text-xs opacity-40 mt-0.5"
-                        style={{ color: card.business.cardFgColor }}
-                      >
+                      <p className="text-xs opacity-40 mt-0.5" style={{ color: card.business.cardFgColor }}>
                         📍 {card.business.address}
                       </p>
                     )}
                   </div>
-                  {/* QR button — visible immediately, top right of card */}
+                  {/* QR button */}
                   <button
                     onClick={() => setActiveQR(card)}
                     className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl border-2 hover:scale-105 active:scale-95 transition-transform"
@@ -168,107 +156,101 @@ export default function MesCartesPage() {
                       background: `${card.business.cardAccentColor}20`,
                     }}
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      className="w-6 h-6"
-                      style={{ color: card.business.cardAccentColor }}
-                    >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6" style={{ color: card.business.cardAccentColor }}>
                       <rect x="3" y="3" width="7" height="7" rx="1" />
                       <rect x="14" y="3" width="7" height="7" rx="1" />
                       <rect x="3" y="14" width="7" height="7" rx="1" />
                       <path d="M14 14h2v2h-2zM18 14h3v2h-3zM14 18h2v3h-2zM18 18h3v3h-3z" fill="currentColor" stroke="none" />
                     </svg>
-                    <span
-                      className="text-xs font-bold"
-                      style={{ color: card.business.cardAccentColor }}
-                    >
+                    <span className="text-xs font-bold" style={{ color: card.business.cardAccentColor }}>
                       Scanner
                     </span>
                   </button>
                 </div>
 
-                {/* Stamps */}
-                <div className="px-5 pt-4 pb-2">
-                  <div className="flex flex-wrap gap-2">
-                    {stamps.map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-                        style={
-                          i < card.stampCount
-                            ? {
-                                background: card.business.cardAccentColor,
-                                color: "#000",
-                                boxShadow: `0 0 10px ${card.business.cardAccentColor}60`,
-                              }
-                            : { border: `1.5px solid ${card.business.cardFgColor}25` }
-                        }
-                      >
-                        {i < card.stampCount ? "★" : ""}
+                {/* Points display */}
+                <div className="px-5 pt-4 pb-3">
+                  <div className="flex items-end gap-1 mb-1">
+                    <span className="text-4xl font-black" style={{ color: card.business.cardAccentColor }}>
+                      {card.points}
+                    </span>
+                    <span className="text-lg font-bold mb-1 opacity-70" style={{ color: card.business.cardAccentColor }}>
+                      pts
+                    </span>
+                    <span className="text-xs opacity-40 mb-1.5 ml-1" style={{ color: card.business.cardFgColor }}>
+                      {session?.user?.name}
+                    </span>
+                  </div>
+
+                  {/* Progress to next reward */}
+                  {nextReward ? (
+                    <div className="mb-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <p className="text-xs opacity-50" style={{ color: card.business.cardFgColor }}>
+                          Prochaine récompense
+                        </p>
+                        <p className="text-xs font-bold" style={{ color: card.business.cardAccentColor }}>
+                          {nextReward.pointsRequired - card.points} pts restants
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Progress + reward */}
-                <div className="px-5 pb-4">
-                  <div className="flex items-end justify-between mb-2">
-                    <div>
-                      <p
-                        className="text-xs opacity-40 mb-0.5"
-                        style={{ color: card.business.cardFgColor }}
-                      >
-                        {session?.user?.name}
-                      </p>
-                      <p
-                        className="text-base font-semibold"
-                        style={{ color: card.business.cardAccentColor }}
-                      >
-                        {card.stampCount}/{card.business.stampsRequired} tampons
+                      <div className="h-2 rounded-full bg-black/20 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${progressToNext}%`, background: card.business.cardAccentColor }}
+                        />
+                      </div>
+                      <p className="text-xs mt-1 font-medium" style={{ color: card.business.cardFgColor + "aa" }}>
+                        🎯 {nextReward.name}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p
-                        className="text-xs opacity-40"
-                        style={{ color: card.business.cardFgColor }}
-                      >
-                        Récompense
-                      </p>
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: card.business.cardFgColor }}
-                      >
-                        {card.business.rewardLabel}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="h-1.5 rounded-full bg-black/20 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        width: `${progress}%`,
-                        background: card.business.cardAccentColor,
-                      }}
-                    />
-                  </div>
-
-                  {nearReward && (
-                    <p
-                      className="text-center text-xs mt-2 font-medium"
-                      style={{ color: card.business.cardAccentColor }}
-                    >
-                      🎯 Plus qu&apos;un tampon pour votre récompense !
+                  ) : rewards.length > 0 ? (
+                    <p className="text-xs font-bold text-green-400 mb-2">
+                      🎉 Toutes les récompenses débloquées !
                     </p>
-                  )}
+                  ) : null}
                 </div>
+
+                {/* Reward tiers */}
+                {rewards.length > 0 && (
+                  <div className="px-5 pb-3">
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                      {rewards.map((reward) => {
+                        const unlocked = card.points >= reward.pointsRequired;
+                        return (
+                          <div
+                            key={reward.id}
+                            className="flex-shrink-0 flex flex-col items-center gap-1 px-3 py-2 rounded-xl border min-w-[80px] text-center"
+                            style={
+                              unlocked
+                                ? {
+                                    borderColor: `${card.business.cardAccentColor}60`,
+                                    background: `${card.business.cardAccentColor}20`,
+                                  }
+                                : { borderColor: `${card.business.cardFgColor}15`, background: "rgba(0,0,0,0.15)" }
+                            }
+                          >
+                            <span className="text-lg">{unlocked ? "🏆" : "🔒"}</span>
+                            <span
+                              className="text-xs font-bold leading-tight"
+                              style={{ color: unlocked ? card.business.cardAccentColor : card.business.cardFgColor + "60" }}
+                            >
+                              {reward.pointsRequired} pts
+                            </span>
+                            <span
+                              className="text-xs leading-tight line-clamp-2"
+                              style={{ color: unlocked ? card.business.cardFgColor : card.business.cardFgColor + "50" }}
+                            >
+                              {reward.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Bottom CTAs */}
                 <div className="mx-4 mb-4 flex flex-col gap-2">
-                  {/* QR code button */}
                   <div
                     className="rounded-2xl py-3.5 flex items-center justify-center gap-2 font-semibold text-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all"
                     style={{ background: card.business.cardAccentColor, color: "#000" }}
@@ -283,9 +265,7 @@ export default function MesCartesPage() {
                     Afficher mon QR code
                   </div>
 
-                  {/* Wallet buttons */}
                   <div className="flex gap-2">
-                    {/* Apple Wallet */}
                     <div className="flex-1 rounded-xl py-3 flex items-center justify-center gap-2 bg-black border border-white/15 cursor-not-allowed opacity-60 relative group">
                       <svg viewBox="0 0 24 24" fill="white" className="w-4 h-4">
                         <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
@@ -295,8 +275,6 @@ export default function MesCartesPage() {
                         Bientôt disponible
                       </span>
                     </div>
-
-                    {/* Google Wallet */}
                     <div className="flex-1 rounded-xl py-3 flex items-center justify-center gap-2 bg-[#1a73e8] border border-[#1a73e8] cursor-not-allowed opacity-60 relative group">
                       <svg viewBox="0 0 24 24" fill="white" className="w-4 h-4">
                         <path d="M21.56 10.738l-.008-.05H12.25v3.027h5.322c-.23 1.22-.93 2.254-1.98 2.942v2.44h3.207c1.876-1.727 2.96-4.274 2.96-7.302 0-.36-.02-.716-.198-1.057z"/>

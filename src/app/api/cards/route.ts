@@ -14,7 +14,11 @@ export async function GET() {
   const cards = await prisma.loyaltyCard.findMany({
     where: { customerId: customer.id, isActive: true },
     include: {
-      business: true,
+      business: {
+        include: {
+          rewards: { where: { isActive: true }, orderBy: { pointsRequired: "asc" } },
+        },
+      },
       transactions: { orderBy: { createdAt: "desc" }, take: 20 },
     },
     orderBy: { issuedAt: "desc" },
