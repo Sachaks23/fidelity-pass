@@ -563,16 +563,12 @@ export default async function LandingPage() {
             </div>
             <span className="font-bold text-white">Fidco</span>
           </Link>
-          <div className="flex items-center gap-6 text-sm text-slate-500">
-            <Link href="/cgu" className="hover:text-slate-300 transition-colors">
-              CGU
-            </Link>
-            <Link href="/confidentialite" className="hover:text-slate-300 transition-colors">
-              Politique de confidentialité
-            </Link>
-            <Link href="/contact" className="hover:text-slate-300 transition-colors">
-              Contact
-            </Link>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+            <Link href="/mentions-legales" className="hover:text-slate-300 transition-colors">Mentions légales</Link>
+            <Link href="/cgu" className="hover:text-slate-300 transition-colors">CGU</Link>
+            <Link href="/cgv" className="hover:text-slate-300 transition-colors">CGV</Link>
+            <Link href="/confidentialite" className="hover:text-slate-300 transition-colors">Confidentialité</Link>
+            <a href="mailto:sacha.kotselas@outlook.fr" className="hover:text-slate-300 transition-colors">Contact</a>
           </div>
           <p className="text-slate-500 text-sm">© 2025 Fidco</p>
         </div>
