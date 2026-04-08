@@ -23,7 +23,11 @@ function ClientLoginForm() {
       setError("Email ou mot de passe incorrect");
       setLoading(false);
     } else {
-      if (rememberMe) localStorage.setItem("fidco_remember", "1");
+      if (rememberMe) {
+        localStorage.setItem("fidco_client_remember", JSON.stringify({ expires: Date.now() + 30 * 24 * 60 * 60 * 1000 }));
+      } else {
+        sessionStorage.setItem("fidco_client_session", "1");
+      }
       window.location.href = "/espace-client";
     }
   }

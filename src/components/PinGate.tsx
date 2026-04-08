@@ -42,10 +42,7 @@ export default function PinGate({ children, storageKey }: Props) {
 
   const isPinVerified = useCallback(() => {
     try {
-      const val = localStorage.getItem(`${storageKey}_pin_verified`);
-      if (!val) return false;
-      const { expires } = JSON.parse(val);
-      return Date.now() < expires;
+      return sessionStorage.getItem(`${storageKey}_pin_verified`) === "1";
     } catch { return false; }
   }, [storageKey]);
 
@@ -65,8 +62,8 @@ export default function PinGate({ children, storageKey }: Props) {
   }, [isPinVerified]);
 
   function markVerified() {
-    const duration = remember ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-    localStorage.setItem(`${storageKey}_pin_verified`, JSON.stringify({ expires: Date.now() + duration }));
+    // PIN vérifié uniquement pour cette session (sessionStorage effacé à la fermeture)
+    sessionStorage.setItem(`${storageKey}_pin_verified`, "1");
     setScreen("none");
   }
 
@@ -265,18 +262,11 @@ export default function PinGate({ children, storageKey }: Props) {
             <PinDots value={pin} />
             {pinError && <p className="text-center text-red-400 text-sm mb-3">{pinError}</p>}
             <Numpad onPress={handlePinInput} onDelete={() => setPin(p => p.slice(0, -1))} />
-            <div className="flex items-center justify-between mt-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}
-                  className="w-4 h-4 rounded accent-amber-400" />
-                <span className="text-slate-400 text-sm">Rester connecté 30 jours</span>
-              </label>
-              {attempts >= 3 || true ? (
-                <button onClick={() => setScreen("recovery-answer")}
-                  className="text-amber-400 text-sm hover:text-amber-300">
-                  PIN oublié ?
-                </button>
-              ) : null}
+            <div className="flex justify-center mt-6">
+              <button onClick={() => setScreen("recovery-answer")}
+                className="text-amber-400 text-sm hover:text-amber-300">
+                PIN oublié ?
+              </button>
             </div>
           </>
         )}

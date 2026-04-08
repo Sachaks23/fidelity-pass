@@ -5,6 +5,7 @@ import { signOut, useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState, useEffect } from "react";
 import PinGate from "@/components/PinGate";
+import { signOut } from "next-auth/react";
 
 const navItems = [
   { href: "/dashboard", label: "Vue d'ensemble", icon: "📊" },
@@ -24,6 +25,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  // Vérifie si "rester connecté" est actif, sinon déconnecte
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const session = sessionStorage.getItem("fidco_pro_session");
+    if (session) return; // session en cours, OK
+    const rememberRaw = localStorage.getItem("fidco_pro_remember");
+    if (rememberRaw) {
+      try {
+        const { expires } = JSON.parse(rememberRaw);
+        if (Date.now() < expires) return; // encore valide
+        localStorage.removeItem("fidco_pro_remember");
+      } catch {}
+    }
+    signOut({ callbackUrl: "/connexion/pro" });
+  }, [status]);
 
   // Ferme la sidebar sur les grands écrans
   useEffect(() => {
