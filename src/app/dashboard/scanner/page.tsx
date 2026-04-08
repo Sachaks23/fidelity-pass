@@ -39,25 +39,44 @@ export default function ScannerPage() {
   async function startScanner() {
     setCameraError("");
     setError("");
+    setScanning(true);
     try {
       const { Html5Qrcode } = await import("html5-qrcode");
       const scanner = new Html5Qrcode("qr-video");
       scannerRef.current = scanner;
 
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 15, qrbox: { width: 220, height: 220 } },
-        async (decodedText: string) => {
-          await stopScanner();
-          setScanning(false);
-          await identifyCard(decodedText.trim());
-        },
-        () => {}
-      );
-      setScanning(true);
+      const onScan = async (decodedText: string) => {
+        await stopScanner();
+        setScanning(false);
+        await identifyCard(decodedText.trim());
+      };
+
+      // Essai caméra arrière d'abord, puis avant en fallback
+      try {
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 15, qrbox: { width: 220, height: 220 } },
+          onScan,
+          () => {}
+        );
+      } catch {
+        await scanner.start(
+          { facingMode: "user" },
+          { fps: 15, qrbox: { width: 220, height: 220 } },
+          onScan,
+          () => {}
+        );
+      }
     } catch (err: any) {
-      setCameraError("Impossible d'accéder à la caméra. Vérifiez les permissions.");
       setScanning(false);
+      const msg = err?.message ?? "";
+      if (msg.includes("NotAllowedError") || msg.includes("Permission") || msg.includes("permission")) {
+        setCameraError("permission_denied");
+      } else if (msg.includes("NotFoundError") || msg.includes("not found")) {
+        setCameraError("no_camera");
+      } else {
+        setCameraError("other");
+      }
     }
   }
 
@@ -228,11 +247,44 @@ export default function ScannerPage() {
         </div>
       )}
 
-      {/* Erreur */}
-      {(error || cameraError) && (
+      {/* Erreur caméra */}
+      {cameraError && (
+        <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/10 mb-4">
+          {cameraError === "permission_denied" && (
+            <>
+              <p className="text-red-400 font-bold mb-2">🚫 Accès à la caméra refusé</p>
+              <p className="text-slate-300 text-sm mb-3">Pour autoriser la caméra :</p>
+              <div className="space-y-1.5 text-sm text-slate-400 mb-4">
+                <p>• <strong className="text-white">iPhone</strong> → Réglages → Safari → Caméra → Autoriser</p>
+                <p>• <strong className="text-white">Android</strong> → Paramètres → Applis → Chrome → Autorisations → Caméra</p>
+                <p>• <strong className="text-white">Sur la page</strong> → appuyez sur l&apos;icône 🔒 dans la barre d&apos;adresse</p>
+              </div>
+            </>
+          )}
+          {cameraError === "no_camera" && (
+            <>
+              <p className="text-red-400 font-bold mb-2">📷 Aucune caméra détectée</p>
+              <p className="text-slate-400 text-sm mb-3">Utilisez la saisie manuelle du numéro de série ci-dessous.</p>
+            </>
+          )}
+          {cameraError === "other" && (
+            <>
+              <p className="text-red-400 font-bold mb-2">❌ Erreur caméra</p>
+              <p className="text-slate-400 text-sm mb-3">Vérifiez que la caméra n&apos;est pas utilisée par une autre application.</p>
+            </>
+          )}
+          <button onClick={() => setCameraError("")}
+            className="w-full py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+            Réessayer
+          </button>
+        </div>
+      )}
+
+      {/* Erreur scan */}
+      {error && (
         <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 mb-4 text-sm">
-          {error || cameraError}
-          <button onClick={() => { setError(""); setCameraError(""); }} className="block mt-2 underline">Réessayer</button>
+          {error}
+          <button onClick={() => setError("")} className="block mt-2 underline">Réessayer</button>
         </div>
       )}
 
