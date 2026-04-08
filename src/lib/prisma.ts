@@ -7,12 +7,12 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  // Chemin absolu vers la base de données — évite les problèmes de répertoire relatif
   const rawUrl = process.env.DATABASE_URL ?? "file:./dev.db";
+  const authToken = process.env.TURSO_AUTH_TOKEN;
 
   let dbUrl: string;
   if (rawUrl.startsWith("file:") && !rawUrl.startsWith("file:///")) {
-    // Chemin relatif → on le résout en absolu depuis la racine du projet
+    // Local SQLite — chemin relatif → absolu
     const relativePath = rawUrl.replace("file:", "");
     const absolutePath = path.resolve(process.cwd(), relativePath);
     dbUrl = `file://${absolutePath}`;
@@ -20,7 +20,11 @@ function createPrismaClient() {
     dbUrl = rawUrl;
   }
 
-  const adapter = new PrismaLibSql({ url: dbUrl });
+  const adapter = new PrismaLibSql({
+    url: dbUrl,
+    ...(authToken ? { authToken } : {}),
+  });
+
   return new PrismaClient({ adapter } as any);
 }
 
