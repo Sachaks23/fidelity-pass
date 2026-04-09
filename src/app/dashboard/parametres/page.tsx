@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export default function ParametresPage() {
   const [business, setBusiness] = useState<any>(null);
@@ -7,8 +8,11 @@ export default function ParametresPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [plan, setPlan] = useState<string>("STARTER");
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
+    fetch("/api/user/plan").then(r => r.json()).then(d => setPlan(d.plan ?? "STARTER"));
     fetch("/api/business")
       .then((r) => r.json())
       .then((b) => {
@@ -161,6 +165,41 @@ export default function ParametresPage() {
           {saving ? "Enregistrement..." : saved ? "✓ Enregistré !" : "Enregistrer les modifications"}
         </button>
       </form>
+
+      {/* Abonnement */}
+      <div className="mt-8 p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
+        <h2 className="text-lg font-bold text-white">Abonnement</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-slate-300 text-sm">Formule actuelle</p>
+            <p className="text-white font-semibold mt-0.5">
+              {plan === "STARTER" ? "Starter (gratuit)" : plan === "PRO" ? "Fidco Pro — 90€/mois" : "Fidco Business — 130€/mois"}
+            </p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${plan === "STARTER" ? "bg-slate-700 text-slate-300" : "bg-amber-500/20 text-amber-400"}`}>
+            {plan === "STARTER" ? "Gratuit" : "Actif"}
+          </span>
+        </div>
+
+        {plan === "STARTER" ? (
+          <Link href="/tarifs" className="block text-center py-3 px-6 rounded-xl gold-gradient text-black font-bold text-sm hover:opacity-90 transition-opacity">
+            Passer à Pro — 7 jours gratuits
+          </Link>
+        ) : (
+          <button
+            onClick={async () => {
+              setPortalLoading(true);
+              const res = await fetch("/api/stripe/portal", { method: "POST" });
+              const { url } = await res.json();
+              window.location.href = url;
+            }}
+            disabled={portalLoading}
+            className="w-full py-3 px-6 rounded-xl border border-white/20 text-white font-semibold text-sm hover:bg-white/5 transition-colors disabled:opacity-50"
+          >
+            {portalLoading ? "Chargement..." : "Gérer mon abonnement (factures, annulation, CB)"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
