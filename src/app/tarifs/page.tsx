@@ -1,7 +1,4 @@
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import SubscribeButton from "@/components/SubscribeButton";
 import { PLANS } from "@/lib/stripe";
 
@@ -66,11 +63,6 @@ const pricingTiers = [
 ];
 
 export default async function TarifsPage() {
-  const session = await getServerSession(authOptions);
-  if (session?.user) {
-    const role = (session.user as { role?: string }).role;
-    redirect(role === "PROFESSIONAL" ? "/dashboard" : "/espace-client");
-  }
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white">
