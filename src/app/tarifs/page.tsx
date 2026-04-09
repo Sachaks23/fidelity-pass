@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import SubscribeButton from "@/components/SubscribeButton";
+import { PLANS } from "@/lib/stripe";
 
 const pricingTiers = [
   {
@@ -20,6 +22,7 @@ const pricingTiers = [
     ],
     cta: "Commencer gratuitement",
     ctaHref: "/register",
+    priceId: null,
     highlight: false,
   },
   {
@@ -37,7 +40,8 @@ const pricingTiers = [
       { text: "Statistiques avancées", included: false },
     ],
     cta: "Démarrer l'essai Pro",
-    ctaHref: "/register",
+    ctaHref: null,
+    priceId: PLANS.PRO.priceId,
     highlight: true,
   },
   {
@@ -55,7 +59,8 @@ const pricingTiers = [
       { text: "Onboarding personnalisé", included: true },
     ],
     cta: "Contacter l'équipe",
-    ctaHref: "/register",
+    ctaHref: null,
+    priceId: PLANS.BUSINESS.priceId,
     highlight: false,
   },
 ];
@@ -145,16 +150,24 @@ export default async function TarifsPage() {
                 ))}
               </ul>
 
-              <Link
-                href={tier.ctaHref}
-                className={`block text-center py-3 px-6 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 ${
-                  tier.highlight
-                    ? "gold-gradient text-black"
-                    : "border border-white/20 text-white hover:bg-white/5"
-                }`}
-              >
-                {tier.cta}
-              </Link>
+              {tier.priceId ? (
+                <SubscribeButton
+                  priceId={tier.priceId}
+                  planName={tier.name}
+                  highlight={tier.highlight}
+                />
+              ) : (
+                <Link
+                  href={tier.ctaHref ?? "/register"}
+                  className={`block text-center py-3 px-6 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 ${
+                    tier.highlight
+                      ? "gold-gradient text-black"
+                      : "border border-white/20 text-white hover:bg-white/5"
+                  }`}
+                >
+                  {tier.cta}
+                </Link>
+              )}
             </div>
           ))}
         </div>

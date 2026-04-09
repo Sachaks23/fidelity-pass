@@ -56,6 +56,11 @@ model User {
   securityQuestion   String?
   securityAnswerHash String?
 
+  stripeCustomerId   String?
+  subscriptionId     String?
+  plan               String  @default("STARTER")
+  subscriptionStatus String  @default("inactive")
+
   accounts Account[]
   sessions Session[]
   business Business?

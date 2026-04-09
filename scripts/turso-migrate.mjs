@@ -20,6 +20,11 @@ const statements = [
   `CREATE TABLE IF NOT EXISTS "EmailNotification" ("id" TEXT NOT NULL PRIMARY KEY, "businessId" TEXT NOT NULL, "subject" TEXT NOT NULL, "body" TEXT NOT NULL, "sentAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "sentCount" INTEGER NOT NULL DEFAULT 0, "status" TEXT NOT NULL DEFAULT 'SENT', CONSTRAINT "EmailNotification_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE RESTRICT ON UPDATE CASCADE)`,
   `CREATE TABLE IF NOT EXISTS "PasswordResetToken" ("id" TEXT NOT NULL PRIMARY KEY, "email" TEXT NOT NULL, "token" TEXT NOT NULL, "expires" DATETIME NOT NULL, "used" INTEGER NOT NULL DEFAULT 0, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
   `CREATE TABLE IF NOT EXISTS "Reward" ("id" TEXT NOT NULL PRIMARY KEY, "businessId" TEXT NOT NULL, "name" TEXT NOT NULL, "description" TEXT, "pointsRequired" INTEGER NOT NULL, "isActive" INTEGER NOT NULL DEFAULT 1, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "Reward_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE RESTRICT ON UPDATE CASCADE)`,
+  // Stripe subscription columns on User
+  `ALTER TABLE "User" ADD COLUMN "stripeCustomerId" TEXT`,
+  `ALTER TABLE "User" ADD COLUMN "subscriptionId" TEXT`,
+  `ALTER TABLE "User" ADD COLUMN "plan" TEXT NOT NULL DEFAULT 'STARTER'`,
+  `ALTER TABLE "User" ADD COLUMN "subscriptionStatus" TEXT NOT NULL DEFAULT 'inactive'`,
   // PIN columns on User
   `ALTER TABLE "User" ADD COLUMN "pinHash" TEXT`,
   `ALTER TABLE "User" ADD COLUMN "securityQuestion" TEXT`,

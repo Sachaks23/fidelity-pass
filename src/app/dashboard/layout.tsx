@@ -19,6 +19,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userPlan, setUserPlan] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/user/plan")
+        .then((r) => r.json())
+        .then((data) => setUserPlan(data.plan ?? null))
+        .catch(() => null);
+    }
+  }, [status]);
 
   // Ferme la sidebar quand on change de page
   useEffect(() => {
@@ -133,6 +143,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
+        {userPlan === "STARTER" && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 text-center text-sm text-amber-300">
+            Passez Pro pour débloquer les notifications et les récompenses illimitées{" "}
+            <Link href="/tarifs" className="font-semibold text-amber-400 underline underline-offset-2 hover:text-amber-300 transition-colors">
+              → Voir les offres
+            </Link>
+          </div>
+        )}
         <div className="flex-1 p-4 lg:p-8">
           {children}
         </div>
