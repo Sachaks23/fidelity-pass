@@ -17,8 +17,8 @@ export default async function LoginChoicePage() {
         {/* Logo */}
         <div className="text-center mb-12">
           <Link href="/" className="inline-flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-lg">FP</div>
-            <span className="font-bold text-3xl text-white">Fidelity Pass</span>
+            <div className="w-12 h-12 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-lg">FC</div>
+            <span className="font-bold text-3xl text-white">Fidco</span>
           </Link>
           <p className="text-slate-400 mt-3">À quel espace souhaitez-vous accéder ?</p>
         </div>

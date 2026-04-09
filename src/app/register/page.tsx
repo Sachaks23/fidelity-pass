@@ -71,8 +71,8 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center text-black font-bold">FP</div>
-            <span className="font-bold text-2xl text-white">Fidelity Pass</span>
+            <div className="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center text-black font-bold">FC</div>
+            <span className="font-bold text-2xl text-white">Fidco</span>
           </Link>
           <h1 className="text-3xl font-bold text-white">Créer votre espace pro</h1>
           <p className="text-slate-400 mt-2">Étape {step}/2</p>

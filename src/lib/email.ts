@@ -96,7 +96,7 @@ export async function sendBusinessNotification({
           <p style="color:#e2e8f0;font-size:15px;line-height:1.7;margin:0;">${message.replace(/\n/g, "<br/>")}</p>
         </div>
 
-        <p style="color:#64748b;font-size:13px;margin:0;">Bonjour ${firstName}, ce message vous a été envoyé par <strong style="color:#94a3b8;">${businessName}</strong> via votre programme de fidélité Fidelity Pass.</p>
+        <p style="color:#64748b;font-size:13px;margin:0;">Bonjour ${firstName}, ce message vous a été envoyé par <strong style="color:#94a3b8;">${businessName}</strong> via votre programme de fidélité Fidco.</p>
       `;
       return resend.emails.send({
         from: FROM,

@@ -168,8 +168,8 @@ export default function NotificationsPage() {
                   <p className="text-xs text-slate-500 mb-3 uppercase tracking-widest">Aperçu</p>
                   <div className="bg-[#1e293b] rounded-lg overflow-hidden border border-white/10">
                     <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 flex items-center gap-2">
-                      <span className="font-black text-black text-sm">FP</span>
-                      <span className="text-black font-bold text-sm">Fidelity Pass</span>
+                      <span className="font-black text-black text-sm">FC</span>
+                      <span className="text-black font-bold text-sm">Fidco</span>
                     </div>
                     <div className="p-4">
                       <p className="text-white font-bold text-sm mb-1">{emailSubject || "Objet de l'email"}</p>
