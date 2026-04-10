@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { computeSegment } from "@/lib/segmentation";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -27,19 +28,17 @@ export async function GET(request: NextRequest) {
     case "1y":
       startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
       break;
-    default: // 30d
+    default:
       startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   }
 
-  const [totalCards, activeCards, todayScans, allCards, allScans] = await Promise.all([
+  const [totalCards, activeCards, todayScans, allCards, allScans, allCardsForSegments] = await Promise.all([
     prisma.loyaltyCard.count({ where: { businessId: business.id } }),
     prisma.loyaltyCard.count({ where: { businessId: business.id, isActive: true } }),
     prisma.scanEvent.count({
       where: {
         businessId: business.id,
-        scannedAt: {
-          gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-        },
+        scannedAt: { gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()) },
       },
     }),
     prisma.loyaltyCard.findMany({
@@ -52,13 +51,60 @@ export async function GET(request: NextRequest) {
       select: { scannedAt: true },
       orderBy: { scannedAt: "asc" },
     }),
+    // Pour segments et top clients : toutes les cartes enrichies
+    prisma.loyaltyCard.findMany({
+      where: { businessId: business.id },
+      include: {
+        customer: true,
+        scanEvents: { orderBy: { scannedAt: "desc" }, take: 1, select: { scannedAt: true } },
+        _count: { select: { scanEvents: true } },
+      },
+    }),
   ]);
 
-  // Group by day
-  const cardsByDay = groupByDay(allCards.map((c: { issuedAt: Date }) => c.issuedAt));
-  const scansByDay = groupByDay(allScans.map((s: { scannedAt: Date }) => s.scannedAt));
+  // Segments distribution
+  const segmentCounts: Record<string, number> = { nouveau: 0, régulier: 0, vip: 0, inactif: 0 };
+  let inactiveCards: Array<{ id: string; name: string; points: number; lastScanDate: Date | null }> = [];
 
-  // Fill date gaps
+  for (const card of allCardsForSegments) {
+    const lastScanDate = card.scanEvents[0]?.scannedAt ?? null;
+    const seg = computeSegment({
+      scanCount: card._count.scanEvents,
+      totalPointsEarned: card.totalPointsEarned,
+      issuedAt: card.issuedAt,
+      lastScanDate,
+    });
+    segmentCounts[seg] = (segmentCounts[seg] || 0) + 1;
+    if (seg === "inactif") {
+      inactiveCards.push({
+        id: card.id,
+        name: `${card.customer.firstName} ${card.customer.lastName}`,
+        points: card.points,
+        lastScanDate,
+      });
+    }
+  }
+
+  // Top 5 clients par points
+  const topClients = allCardsForSegments
+    .sort((a, b) => b.totalPointsEarned - a.totalPointsEarned)
+    .slice(0, 5)
+    .map((card) => ({
+      id: card.id,
+      name: `${card.customer.firstName} ${card.customer.lastName}`,
+      points: card.points,
+      totalPointsEarned: card.totalPointsEarned,
+      scanCount: card._count.scanEvents,
+    }));
+
+  // Taux de retour : clients ayant scanné au moins 2 fois / total
+  const returningCount = allCardsForSegments.filter((c) => c._count.scanEvents >= 2).length;
+  const returnRate = totalCards > 0 ? Math.round((returningCount / totalCards) * 100) : 0;
+
+  // Group by day
+  const cardsByDay = groupByDay(allCards.map((c) => c.issuedAt));
+  const scansByDay = groupByDay(allScans.map((s) => s.scannedAt));
+
   const newCustomers = fillDateGaps(cardsByDay, startDate, now);
   const scansPerDay = fillDateGaps(scansByDay, startDate, now);
 
@@ -66,8 +112,13 @@ export async function GET(request: NextRequest) {
     totalCustomers: totalCards,
     activeCards,
     totalScansToday: todayScans,
+    returnRate,
     newCustomers,
     scansPerDay,
+    segmentCounts,
+    topClients,
+    inactiveClients: inactiveCards.slice(0, 5),
+    inactiveCount: inactiveCards.length,
   });
 }
 

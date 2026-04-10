@@ -8,12 +8,20 @@ interface CardInfo {
   totalPointsEarned: number;
 }
 
+interface Reward {
+  id: string;
+  name: string;
+  pointsRequired: number;
+}
+
 interface ScanResult {
   success: boolean;
+  cardId: string;
   customerName: string;
   pointsEarned: number;
   newPoints: number;
   newlyUnlocked: Array<{ id: string; name: string; pointsRequired: number }>;
+  redeemableRewards: Reward[];
   nextReward: { name: string; pointsRequired: number } | null;
   message: string;
 }
@@ -27,6 +35,8 @@ export default function ScannerPage() {
   const [manualSerial, setManualSerial] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [redeemingId, setRedeemingId] = useState<string | null>(null);
+  const [redeemMsg, setRedeemMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const scannerRef = useRef<any>(null);
 
   useEffect(() => { return () => { stopScanner(); }; }, []);
@@ -66,7 +76,7 @@ export default function ScannerPage() {
   }
 
   async function identifyCard(serialNumber: string) {
-    setResult(null); setError(""); setCardInfo(null);
+    setResult(null); setError(""); setCardInfo(null); setRedeemMsg(null);
     try {
       const res = await fetch("/api/cards/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ serialNumber }) });
       const data = await res.json();
@@ -79,6 +89,7 @@ export default function ScannerPage() {
     e.preventDefault();
     if (!cardInfo || !amount) return;
     setSubmitting(true);
+    setRedeemMsg(null);
     try {
       const res = await fetch("/api/cards/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ serialNumber: cardInfo.serialNumber, amount: parseFloat(amount) }) });
       const data = await res.json();
@@ -95,7 +106,35 @@ export default function ScannerPage() {
     setManualSerial("");
   }
 
-  function reset() { setResult(null); setCardInfo(null); setError(""); setAmount(""); }
+  async function handleRedeem(rewardId: string) {
+    if (!result) return;
+    setRedeemingId(rewardId);
+    setRedeemMsg(null);
+    const res = await fetch("/api/cards/redeem", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cardId: result.cardId, rewardId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setRedeemMsg({ type: "ok", text: `Récompense « ${data.rewardName} » validée` });
+      // Mettre à jour les points et retirer la récompense utilisée
+      setResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              newPoints: data.newPoints,
+              redeemableRewards: prev.redeemableRewards.filter((r) => r.id !== rewardId),
+            }
+          : prev
+      );
+    } else {
+      setRedeemMsg({ type: "err", text: data.error || "Erreur lors de la validation" });
+    }
+    setRedeemingId(null);
+  }
+
+  function reset() { setResult(null); setCardInfo(null); setError(""); setAmount(""); setRedeemMsg(null); }
 
   return (
     <div className="max-w-md mx-auto">
@@ -172,10 +211,24 @@ export default function ScannerPage() {
           background: "var(--surface-1)",
           border: `1px solid ${result.newlyUnlocked.length > 0 ? "rgba(34,197,94,0.25)" : "rgba(245,158,11,0.2)"}`,
         }}>
+          {/* En-tête résultat */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
-              style={{ background: result.newlyUnlocked.length > 0 ? "rgba(34,197,94,0.15)" : "rgba(245,158,11,0.15)", color: result.newlyUnlocked.length > 0 ? "#22c55e" : "#f59e0b" }}>
-              {result.newlyUnlocked.length > 0 ? "🏆" : "✓"}
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0"
+              style={{
+                background: result.newlyUnlocked.length > 0 ? "rgba(34,197,94,0.15)" : "rgba(245,158,11,0.15)",
+                color: result.newlyUnlocked.length > 0 ? "#22c55e" : "#f59e0b",
+              }}
+            >
+              {result.newlyUnlocked.length > 0 ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                  <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                  <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
             </div>
             <div>
               <p className="text-sm font-semibold text-white">{result.customerName}</p>
@@ -185,6 +238,7 @@ export default function ScannerPage() {
             </div>
           </div>
 
+          {/* Récompense débloquée */}
           {result.newlyUnlocked.length > 0 && (
             <div className="rounded-lg p-3 mb-4" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
               <p className="text-xs font-semibold mb-1.5" style={{ color: "#22c55e" }}>Récompense débloquée</p>
@@ -194,6 +248,48 @@ export default function ScannerPage() {
             </div>
           )}
 
+          {/* Message récompense utilisée */}
+          {redeemMsg && (
+            <div
+              className="rounded-lg px-3 py-2.5 mb-4 text-xs font-medium"
+              style={{
+                background: redeemMsg.type === "ok" ? "rgba(52,211,153,0.08)" : "rgba(239,68,68,0.08)",
+                border: `1px solid ${redeemMsg.type === "ok" ? "rgba(52,211,153,0.2)" : "rgba(239,68,68,0.2)"}`,
+                color: redeemMsg.type === "ok" ? "#34d399" : "#ef4444",
+              }}
+            >
+              {redeemMsg.text}
+            </div>
+          )}
+
+          {/* Récompenses disponibles à utiliser */}
+          {result.redeemableRewards.length > 0 && (
+            <div className="rounded-lg p-3 mb-4" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+              <p className="text-xs font-semibold mb-2.5" style={{ color: "var(--text-muted)" }}>
+                Récompenses disponibles ({result.newPoints} pts)
+              </p>
+              <div className="space-y-2">
+                {result.redeemableRewards.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-white truncate">{r.name}</p>
+                      <p className="text-xs" style={{ color: "#f59e0b" }}>{r.pointsRequired} pts</p>
+                    </div>
+                    <button
+                      onClick={() => handleRedeem(r.id)}
+                      disabled={redeemingId !== null}
+                      className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-40"
+                      style={{ background: "rgba(52,211,153,0.12)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}
+                    >
+                      {redeemingId === r.id ? "..." : "Utiliser"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Prochaine récompense */}
           {result.nextReward && (
             <div className="rounded-lg p-3 mb-4" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
               <div className="flex justify-between items-center mb-1.5">

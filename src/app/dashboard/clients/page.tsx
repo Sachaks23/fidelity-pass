@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { segmentConfig, type Segment } from "@/lib/segmentation";
 
 interface CardEntry {
   id: string;
@@ -8,7 +9,10 @@ interface CardEntry {
   stampCount: number;
   totalStamps: number;
   points: number;
+  totalPointsEarned: number;
   issuedAt: string;
+  lastScanDate: string | null;
+  segment: Segment;
   customer: {
     id: string;
     firstName: string;
@@ -16,7 +20,7 @@ interface CardEntry {
     phone: string | null;
     user: { email: string };
   };
-  _count: { transactions: number };
+  _count: { transactions: number; scanEvents: number };
 }
 
 export default function ClientsPage() {
@@ -49,6 +53,16 @@ export default function ClientsPage() {
 
   const totalPages = Math.ceil(total / limit);
 
+  function formatLastVisit(date: string | null) {
+    if (!date) return "—";
+    const d = new Date(date);
+    const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return "Aujourd'hui";
+    if (diff === 1) return "Hier";
+    if (diff < 7) return `Il y a ${diff}j`;
+    return d.toLocaleDateString("fr-FR");
+  }
+
   return (
     <div className="max-w-5xl">
       {/* Header */}
@@ -56,7 +70,7 @@ export default function ClientsPage() {
         <div>
           <h1 className="text-xl font-semibold text-white">Clients</h1>
           <p className="text-sm mt-0.5 flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
-            {total} membre{total > 1 ? "s" : ""} inscrits
+            {total} membre{total !== 1 ? "s" : ""} inscrits
             {plan === "STARTER" && (
               <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" }}>
                 {total}/30 — Starter
@@ -112,7 +126,7 @@ export default function ClientsPage() {
                 Points
               </th>
               <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider hidden lg:table-cell" style={{ color: "var(--text-muted)" }}>
-                Inscrit le
+                Dernière visite
               </th>
               <th className="px-5 py-3" />
             </tr>
@@ -142,58 +156,69 @@ export default function ClientsPage() {
                 </td>
               </tr>
             ) : (
-              cards.map((card, i) => (
-                <tr
-                  key={card.id}
-                  className="transition-colors hover:bg-white/[0.025]"
-                  style={{ borderBottom: i < cards.length - 1 ? "1px solid var(--border)" : "none" }}
-                >
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-black text-xs font-bold flex-shrink-0">
-                        {card.customer.firstName[0]}{card.customer.lastName[0]}
+              cards.map((card, i) => {
+                const seg = segmentConfig[card.segment];
+                return (
+                  <tr
+                    key={card.id}
+                    className="transition-colors hover:bg-white/[0.025]"
+                    style={{ borderBottom: i < cards.length - 1 ? "1px solid var(--border)" : "none" }}
+                  >
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-black text-xs font-bold flex-shrink-0">
+                          {card.customer.firstName[0]}{card.customer.lastName[0]}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-white leading-tight">
+                              {card.customer.firstName} {card.customer.lastName}
+                            </p>
+                            <span
+                              className="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                              style={{ background: seg.bg, color: seg.color, border: `1px solid ${seg.border}` }}
+                            >
+                              {seg.label}
+                            </span>
+                          </div>
+                          <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                            {card._count.scanEvents} visite{card._count.scanEvents !== 1 ? "s" : ""}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-white leading-tight">
-                          {card.customer.firstName} {card.customer.lastName}
-                        </p>
-                        <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                          {card._count.transactions} transaction{card._count.transactions > 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5 hidden md:table-cell">
-                    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{card.customer.user.email}</p>
-                    {card.customer.phone && (
-                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{card.customer.phone}</p>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 hidden sm:table-cell">
-                    <span className="text-sm font-semibold" style={{ color: "#f59e0b" }}>
-                      {card.points ?? 0}
-                    </span>
-                    <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>pts</span>
-                  </td>
-                  <td className="px-5 py-3.5 hidden lg:table-cell">
-                    <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-                      {new Date(card.issuedAt).toLocaleDateString("fr-FR")}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <Link
-                      href={`/dashboard/clients/${card.id}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                      style={{ background: "var(--surface-2)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
-                    >
-                      Voir
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3">
-                        <polyline points="9 18 15 12 9 6" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </Link>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td className="px-5 py-3.5 hidden md:table-cell">
+                      <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{card.customer.user.email}</p>
+                      {card.customer.phone && (
+                        <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{card.customer.phone}</p>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 hidden sm:table-cell">
+                      <span className="text-sm font-semibold" style={{ color: "#f59e0b" }}>
+                        {card.points ?? 0}
+                      </span>
+                      <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>pts</span>
+                    </td>
+                    <td className="px-5 py-3.5 hidden lg:table-cell">
+                      <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                        {formatLastVisit(card.lastScanDate)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <Link
+                        href={`/dashboard/clients/${card.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                        style={{ background: "var(--surface-2)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+                      >
+                        Voir
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3">
+                          <polyline points="9 18 15 12 9 6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

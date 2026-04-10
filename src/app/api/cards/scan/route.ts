@@ -79,16 +79,21 @@ export async function POST(request: NextRequest) {
   // Find next reward
   const nextReward = business.rewards.find((r) => r.pointsRequired > newPoints);
 
+  // Toutes les récompenses disponibles pour ce solde
+  const redeemableRewards = business.rewards.filter((r) => r.pointsRequired <= newPoints);
+
   return NextResponse.json({
     success: true,
     step: "done",
+    cardId: card.id,
     customerName: `${card.customer.firstName} ${card.customer.lastName}`,
     pointsEarned,
     newPoints,
     newlyUnlocked,
+    redeemableRewards,
     nextReward: nextReward ?? null,
     message: newlyUnlocked.length > 0
-      ? `🎉 ${pointsEarned} points ajoutés ! Récompense débloquée : ${newlyUnlocked[0].name}`
-      : `⭐ ${pointsEarned} points ajoutés ! Total : ${newPoints} pts`,
+      ? `${pointsEarned} points ajoutés — Récompense débloquée : ${newlyUnlocked[0].name}`
+      : `${pointsEarned} points ajoutés — Total : ${newPoints} pts`,
   });
 }

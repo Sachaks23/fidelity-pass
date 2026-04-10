@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { computeSegment } from "@/lib/segmentation";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -35,18 +36,31 @@ export async function GET(request: NextRequest) {
       customer: {
         include: { user: { select: { email: true } } },
       },
-      _count: { select: { transactions: true } },
+      scanEvents: { orderBy: { scannedAt: "desc" }, take: 1, select: { scannedAt: true } },
+      _count: { select: { transactions: true, scanEvents: true } },
     },
     orderBy: { issuedAt: "desc" },
     skip,
     take: limit,
   });
 
+  // Enrichir avec la segmentation
+  const enrichedCards = cards.map((card) => {
+    const lastScanDate = card.scanEvents[0]?.scannedAt ?? null;
+    const segment = computeSegment({
+      scanCount: card._count.scanEvents,
+      totalPointsEarned: card.totalPointsEarned,
+      issuedAt: card.issuedAt,
+      lastScanDate,
+    });
+    return { ...card, lastScanDate, segment };
+  });
+
   const total = await prisma.loyaltyCard.count({
     where: { businessId: business.id },
   });
 
-  return NextResponse.json({ cards, total, page, limit });
+  return NextResponse.json({ cards: enrichedCards, total, page, limit });
 }
 
 export async function POST(request: NextRequest) {
