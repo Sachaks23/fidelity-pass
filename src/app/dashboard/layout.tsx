@@ -10,6 +10,7 @@ const navItems = [
   { href: "/dashboard", label: "Vue d'ensemble", icon: "📊" },
   { href: "/dashboard/clients", label: "Mes clients", icon: "👥" },
   { href: "/dashboard/scanner", label: "Scanner", icon: "📷" },
+  { href: "/dashboard/carte", label: "Ma carte", icon: "💳" },
   { href: "/dashboard/recompenses", label: "Récompenses", icon: "🎁" },
   { href: "/dashboard/notifications", label: "Notifications", icon: "🔔" },
   { href: "/dashboard/parametres", label: "Paramètres", icon: "⚙️" },

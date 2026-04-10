@@ -34,6 +34,7 @@ export async function PATCH(request: NextRequest) {
       cardBgColor: body.cardBgColor,
       cardFgColor: body.cardFgColor,
       cardAccentColor: body.cardAccentColor,
+      cardLogoUrl: body.cardLogoUrl !== undefined ? body.cardLogoUrl : undefined,
       stampsRequired: body.stampsRequired,
       rewardLabel: body.rewardLabel,
       ...(body.pointsPerEuro !== undefined && { pointsPerEuro: parseFloat(body.pointsPerEuro) }),

@@ -79,6 +79,7 @@ model Business {
   cardBgColor     String   @default("#1a1a2e")
   cardFgColor     String   @default("#ffffff")
   cardAccentColor String   @default("#e94560")
+  cardLogoUrl     String?
   stampsRequired  Int      @default(10)
   rewardLabel     String   @default("Récompense offerte")
   pointsPerEuro   Float    @default(1.0)

@@ -37,6 +37,8 @@ const statements = [
   `ALTER TABLE "Transaction" ADD COLUMN "amount" REAL`,
   `ALTER TABLE "ScanEvent" ADD COLUMN "amount" REAL`,
   `ALTER TABLE "ScanEvent" ADD COLUMN "pointsEarned" INTEGER NOT NULL DEFAULT 0`,
+  // Card logo
+  `ALTER TABLE "Business" ADD COLUMN "cardLogoUrl" TEXT`,
   // Indexes
   `CREATE UNIQUE INDEX IF NOT EXISTS "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId")`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "Session_sessionToken_key" ON "Session"("sessionToken")`,
