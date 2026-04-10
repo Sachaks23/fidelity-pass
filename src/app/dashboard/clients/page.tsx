@@ -26,11 +26,13 @@ export default function ClientsPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [business, setBusiness] = useState<any>(null);
+  const [plan, setPlan] = useState<string>("STARTER");
 
   const limit = 20;
 
   useEffect(() => {
     fetch("/api/business").then((r) => r.json()).then(setBusiness).catch(console.error);
+    fetch("/api/user/plan").then(r => r.json()).then(d => setPlan(d.plan ?? "STARTER"));
   }, []);
 
   const fetchClients = useCallback(async () => {
@@ -53,8 +55,13 @@ export default function ClientsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Clients</h1>
-          <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
+          <p className="text-sm mt-0.5 flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
             {total} membre{total > 1 ? "s" : ""} inscrits
+            {plan === "STARTER" && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" }}>
+                {total}/30 — Starter
+              </span>
+            )}
           </p>
         </div>
         {business && (

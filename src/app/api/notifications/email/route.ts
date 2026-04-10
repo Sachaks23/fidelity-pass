@@ -29,6 +29,11 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   try {
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (dbUser?.plan === "STARTER") {
+      return NextResponse.json({ error: "Les notifications email sont réservées aux abonnés Pro.", upgrade: true }, { status: 403 });
+    }
+
     const { subject, message } = await req.json();
     if (!subject?.trim() || !message?.trim()) {
       return NextResponse.json({ error: "Sujet et message requis" }, { status: 400 });

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface Reward {
   id: string;
@@ -22,8 +23,12 @@ export default function RecompensesPage() {
   const [pointsPerEuro, setPointsPerEuro] = useState<number>(1);
   const [savingPPE, setSavingPPE] = useState(false);
   const [savedPPE, setSavedPPE] = useState(false);
+  const [plan, setPlan] = useState<string>("STARTER");
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    fetch("/api/user/plan").then(r => r.json()).then(d => setPlan(d.plan ?? "STARTER"));
+    loadData();
+  }, []);
 
   async function loadData() {
     const [rewardsRes, businessRes] = await Promise.all([
@@ -241,6 +246,29 @@ export default function RecompensesPage() {
       </div>
 
       {/* Ajouter un palier */}
+      {plan === "STARTER" && rewards.length >= 1 ? (
+        <div className="rounded-xl p-8 text-center" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth={1.75} className="w-5 h-5">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" strokeLinecap="round" />
+            </svg>
+          </div>
+          <p className="text-base font-semibold text-white mb-1">Récompenses illimitées — Pro uniquement</p>
+          <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
+            La formule Starter est limitée à 1 récompense. Passez à Pro pour en ajouter autant que vous voulez.
+          </p>
+          <Link
+            href="/dashboard/abonnement"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold gold-gradient text-black hover:opacity-90 transition-opacity"
+          >
+            Passer à Pro — 7 jours gratuits
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+              <polyline points="9 18 15 12 9 6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+        </div>
+      ) : (
       <div className="rounded-xl p-5" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
         <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
           Ajouter un palier
@@ -295,6 +323,7 @@ export default function RecompensesPage() {
           </button>
         </form>
       </div>
+      )}
     </div>
   );
 }

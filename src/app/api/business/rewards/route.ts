@@ -24,8 +24,16 @@ export async function POST(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
+  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   const business = await prisma.business.findUnique({ where: { userId } });
   if (!business) return NextResponse.json({ error: "Commerce introuvable" }, { status: 404 });
+
+  if (dbUser?.plan === "STARTER") {
+    const existingCount = await prisma.reward.count({ where: { businessId: business.id } });
+    if (existingCount >= 1) {
+      return NextResponse.json({ error: "Les abonnés Starter peuvent créer 1 récompense maximum. Passez à Pro pour en ajouter davantage.", upgrade: true }, { status: 403 });
+    }
+  }
 
   const { name, description, pointsRequired } = await req.json();
   if (!name?.trim() || !pointsRequired) {

@@ -26,6 +26,11 @@ export async function POST(request: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const user = session.user as any;
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+  if (dbUser?.plan === "STARTER") {
+    return NextResponse.json({ error: "Les notifications push sont réservées aux abonnés Pro.", upgrade: true }, { status: 403 });
+  }
+
   const business = await prisma.business.findUnique({ where: { userId: user.id } });
   if (!business) return NextResponse.json({ error: "Commerce non trouvé" }, { status: 404 });
 

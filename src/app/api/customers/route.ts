@@ -58,8 +58,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
     }
 
-    const business = await prisma.business.findUnique({ where: { slug: businessSlug } });
+    const business = await prisma.business.findUnique({ where: { slug: businessSlug }, include: { user: true } });
     if (!business) return NextResponse.json({ error: "Commerce non trouvé" }, { status: 404 });
+
+    if (business.user.plan === "STARTER") {
+      const clientCount = await prisma.loyaltyCard.count({ where: { businessId: business.id } });
+      if (clientCount >= 30) {
+        return NextResponse.json({ error: "Ce commerce a atteint sa limite de clients. Contactez-le directement." }, { status: 403 });
+      }
+    }
 
     let user = await prisma.user.findUnique({ where: { email } });
 
