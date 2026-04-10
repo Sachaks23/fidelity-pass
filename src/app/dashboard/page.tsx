@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import Link from "next/link";
 
 type Range = "7d" | "30d" | "6m" | "1y";
 
 const rangeLabels: Record<Range, string> = {
-  "7d": "7 jours",
-  "30d": "30 jours",
+  "7d": "7j",
+  "30d": "30j",
   "6m": "6 mois",
   "1y": "1 an",
 };
@@ -19,18 +20,44 @@ interface Analytics {
   scansPerDay: Array<{ date: string; count: number }>;
 }
 
-function StatCard({ icon, label, value, sub }: { icon: string; label: string; value: string | number; sub?: string }) {
+function StatCard({
+  label,
+  value,
+  sub,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  sub?: string;
+  icon: React.ReactNode;
+}) {
   return (
-    <div className="p-6 rounded-2xl border border-white/10 bg-white/5">
+    <div className="rounded-xl p-5" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-3xl">{icon}</span>
-        <span className="text-xs text-slate-500 uppercase tracking-widest">{label}</span>
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+          {label}
+        </p>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--surface-3)", color: "var(--text-secondary)" }}>
+          {icon}
+        </div>
       </div>
-      <p className="text-4xl font-bold text-white">{value}</p>
-      {sub && <p className="text-sm text-slate-400 mt-1">{sub}</p>}
+      <p className="text-3xl font-bold text-white leading-none">{value}</p>
+      {sub && <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{sub}</p>}
     </div>
   );
 }
+
+const tooltipStyle = {
+  contentStyle: {
+    background: "#111d33",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "8px",
+    color: "#f1f5f9",
+    fontSize: "12px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+  },
+  cursor: { stroke: "rgba(245,158,11,0.2)", strokeWidth: 1 },
+};
 
 export default function DashboardPage() {
   const [range, setRange] = useState<Range>("30d");
@@ -52,42 +79,37 @@ export default function DashboardPage() {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    if (range === "1y" || range === "6m") {
-      return d.toLocaleDateString("fr-FR", { month: "short", day: "numeric" });
-    }
     return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
   };
 
-  // Sample chart data if sparse
-  const chartData = analytics?.newCustomers.map((d) => ({
-    ...d,
-    label: formatDate(d.date),
-  })) || [];
-
-  const scanData = analytics?.scansPerDay.map((d) => ({
-    ...d,
-    label: formatDate(d.date),
-  })) || [];
+  const chartData = analytics?.newCustomers.map((d) => ({ ...d, label: formatDate(d.date) })) || [];
+  const scanData = analytics?.scansPerDay.map((d) => ({ ...d, label: formatDate(d.date) })) || [];
 
   return (
-    <div>
+    <div className="max-w-5xl">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">Tableau de bord</h1>
-          {business && (
-            <p className="text-slate-400 mt-1">{business.name} · {business.category}</p>
-          )}
+          <h1 className="text-xl font-semibold text-white">
+            {business ? business.name : "Tableau de bord"}
+          </h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
+            {business ? business.category : "Chargement..."}
+          </p>
         </div>
-        <div className="flex gap-2">
+
+        {/* Range selector */}
+        <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
           {(Object.keys(rangeLabels) as Range[]).map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className="px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+              style={
                 range === r
-                  ? "gold-gradient text-black"
-                  : "border border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
-              }`}
+                  ? { background: "var(--surface-3)", color: "white" }
+                  : { color: "var(--text-muted)" }
+              }
             >
               {rangeLabels[r]}
             </button>
@@ -96,70 +118,125 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        <StatCard icon="👥" label="Clients inscrits" value={analytics?.totalCustomers ?? "—"} sub="cartes de fidélité actives" />
-        <StatCard icon="✅" label="Cartes actives" value={analytics?.activeCards ?? "—"} />
-        <StatCard icon="📷" label="Scans aujourd'hui" value={analytics?.totalScansToday ?? "—"} sub="passages en caisse" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <StatCard
+          label="Clients inscrits"
+          value={analytics?.totalCustomers ?? "—"}
+          sub="membres actifs"
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+              <circle cx="9" cy="7" r="4" />
+              <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" strokeLinecap="round" />
+              <path d="M21 21v-2a4 4 0 0 0-3-3.87" strokeLinecap="round" />
+            </svg>
+          }
+        />
+        <StatCard
+          label="Cartes actives"
+          value={analytics?.activeCards ?? "—"}
+          sub="cartes en circulation"
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <path d="M2 10h20" strokeLinecap="round" />
+            </svg>
+          }
+        />
+        <StatCard
+          label="Scans aujourd'hui"
+          value={analytics?.totalScansToday ?? "—"}
+          sub="passages en caisse"
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" strokeLinecap="round" />
+              <rect x="7" y="7" width="3" height="3" rx="0.5" />
+              <rect x="14" y="7" width="3" height="3" rx="0.5" />
+              <rect x="7" y="14" width="3" height="3" rx="0.5" />
+              <path d="M14 14h3v3h-3z" />
+            </svg>
+          }
+        />
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="p-6 rounded-2xl border border-white/10 bg-white/5">
-          <h3 className="text-white font-semibold mb-6">Nouvelles inscriptions</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div className="rounded-xl p-5" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-sm font-semibold text-white">Nouvelles inscriptions</p>
+          </div>
           {loading ? (
-            <div className="h-48 flex items-center justify-center text-slate-500">Chargement...</div>
+            <div className="h-44 flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={176}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="label" stroke="#64748b" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
-                <YAxis stroke="#64748b" tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ background: "#1e293b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#fff" }}
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                <XAxis dataKey="label" stroke="#334155" tick={{ fontSize: 10, fill: "#475569" }} interval="preserveStartEnd" axisLine={false} tickLine={false} />
+                <YAxis stroke="#334155" tick={{ fontSize: 10, fill: "#475569" }} allowDecimals={false} axisLine={false} tickLine={false} width={28} />
+                <Tooltip {...tooltipStyle} />
                 <Line type="monotone" dataKey="count" stroke="#f59e0b" strokeWidth={2} dot={false} name="Inscriptions" />
               </LineChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        <div className="p-6 rounded-2xl border border-white/10 bg-white/5">
-          <h3 className="text-white font-semibold mb-6">Scans par jour</h3>
+        <div className="rounded-xl p-5" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-sm font-semibold text-white">Scans par jour</p>
+          </div>
           {loading ? (
-            <div className="h-48 flex items-center justify-center text-slate-500">Chargement...</div>
+            <div className="h-44 flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={176}>
               <BarChart data={scanData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="label" stroke="#64748b" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
-                <YAxis stroke="#64748b" tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ background: "#1e293b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#fff" }}
-                />
-                <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Scans" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                <XAxis dataKey="label" stroke="#334155" tick={{ fontSize: 10, fill: "#475569" }} interval="preserveStartEnd" axisLine={false} tickLine={false} />
+                <YAxis stroke="#334155" tick={{ fontSize: 10, fill: "#475569" }} allowDecimals={false} axisLine={false} tickLine={false} width={28} />
+                <Tooltip {...tooltipStyle} />
+                <Bar dataKey="count" fill="#f59e0b" radius={[3, 3, 0, 0]} name="Scans" opacity={0.85} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
       </div>
 
-      {/* Quick QR */}
+      {/* QR inscription */}
       {business && (
-        <div className="mt-6 p-6 rounded-2xl border border-amber-500/20 bg-amber-500/5">
-          <div className="flex items-center gap-4">
-            <div className="text-4xl">📲</div>
-            <div className="flex-1">
-              <h3 className="text-white font-semibold">QR Code d&apos;inscription</h3>
-              <p className="text-slate-400 text-sm mt-1">
-                Partagez ce QR code pour que vos clients s&apos;inscrivent à votre programme de fidélité
-              </p>
-            </div>
+        <div className="rounded-xl p-5 flex items-center gap-5" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-5 h-5">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <path d="M14 14h2v2h-2zM18 14h3v2h-3zM14 18h2v3h-2zM18 18h3v3h-3z" fill="currentColor" stroke="none" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white">QR code d&apos;inscription</p>
+            <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+              Partagez ce code pour que vos clients s&apos;inscrivent à votre programme
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <a
+              href={`/rejoindre/${business.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+              style={{ background: "var(--surface-3)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+            >
+              Voir la page
+            </a>
             <a
               href="/api/business/qr"
               download="qr-inscription.png"
-              className="px-5 py-2 rounded-lg gold-gradient text-black font-semibold text-sm hover:opacity-90 transition-opacity"
+              className="px-3 py-2 rounded-lg text-xs font-medium text-black gold-gradient hover:opacity-90 transition-opacity"
             >
-              Télécharger le QR →
+              Télécharger
             </a>
           </div>
         </div>

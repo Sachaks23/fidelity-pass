@@ -2,6 +2,30 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+const inputClass = "w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-slate-600 transition-colors focus:outline-none";
+const inputStyle = { background: "var(--surface-2)", border: "1px solid var(--border)" };
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+      <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{title}</p>
+      </div>
+      <div className="px-5 py-5 space-y-4">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-white mb-1.5">{label}</label>
+      {hint && <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{hint}</p>}
+      {children}
+    </div>
+  );
+}
+
 export default function ParametresPage() {
   const [business, setBusiness] = useState<any>(null);
   const [form, setForm] = useState<any>({});
@@ -13,23 +37,16 @@ export default function ParametresPage() {
 
   useEffect(() => {
     fetch("/api/user/plan").then(r => r.json()).then(d => setPlan(d.plan ?? "STARTER"));
-    fetch("/api/business")
-      .then((r) => r.json())
-      .then((b) => {
-        setBusiness(b);
-        setForm({
-          name: b.name,
-          address: b.address || "",
-          phone: b.phone || "",
-          description: b.description || "",
-          cardBgColor: b.cardBgColor,
-          cardFgColor: b.cardFgColor,
-          cardAccentColor: b.cardAccentColor,
-          stampsRequired: b.stampsRequired,
-          rewardLabel: b.rewardLabel,
-        });
-        setLoading(false);
+    fetch("/api/business").then((r) => r.json()).then((b) => {
+      setBusiness(b);
+      setForm({
+        name: b.name, address: b.address || "", phone: b.phone || "",
+        description: b.description || "", cardBgColor: b.cardBgColor,
+        cardFgColor: b.cardFgColor, cardAccentColor: b.cardAccentColor,
+        stampsRequired: b.stampsRequired, rewardLabel: b.rewardLabel,
       });
+      setLoading(false);
+    });
   }, []);
 
   async function handleSave(e: React.FormEvent) {
@@ -49,156 +66,107 @@ export default function ParametresPage() {
     setForm((p: any) => ({ ...p, [key]: value }));
   }
 
-  const inputClass = "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors";
-  const labelClass = "block text-sm font-medium text-slate-300 mb-2";
-
-  if (loading) return <div className="text-slate-500 animate-pulse">Chargement...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div className="max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Paramètres</h1>
-        <p className="text-slate-400 mt-1">Personnalisez votre programme de fidélité</p>
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-white">Paramètres</h1>
+        <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>Gérez les informations et le programme de fidélité</p>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
-        {/* Business info */}
-        <div className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-5">
-          <h2 className="text-lg font-bold text-white">Informations du commerce</h2>
-          <div>
-            <label className={labelClass}>Nom du commerce</label>
-            <input type="text" value={form.name} onChange={(e) => update("name", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass}>Adresse</label>
-            <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} className={inputClass} placeholder="123 rue..." />
-          </div>
-          <div>
-            <label className={labelClass}>Téléphone</label>
-            <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass}>Description</label>
+      <form onSubmit={handleSave} className="space-y-4">
+        <Section title="Informations du commerce">
+          <Field label="Nom du commerce">
+            <input type="text" value={form.name} onChange={(e) => update("name", e.target.value)} className={inputClass} style={inputStyle} />
+          </Field>
+          <Field label="Adresse">
+            <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} className={inputClass} style={inputStyle} placeholder="123 rue de la Paix..." />
+          </Field>
+          <Field label="Téléphone">
+            <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} className={inputClass} style={inputStyle} />
+          </Field>
+          <Field label="Description" hint="Décrit votre établissement sur la page d'inscription">
             <textarea value={form.description} onChange={(e) => update("description", e.target.value)}
-              rows={3} className={inputClass + " resize-none"} placeholder="Décrivez votre établissement..." />
-          </div>
-        </div>
+              rows={3} className={inputClass + " resize-none"} style={inputStyle} placeholder="Bienvenue dans notre établissement..." />
+          </Field>
+        </Section>
 
-        {/* Loyalty program */}
-        <div className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-5">
-          <h2 className="text-lg font-bold text-white">Programme de fidélité</h2>
-          <div>
-            <label className={labelClass}>Nombre de tampons pour une récompense</label>
+        <Section title="Programme de fidélité">
+          <Field label="Tampons pour une récompense" hint="Nombre de tampons nécessaires pour déclencher la récompense principale">
             <input type="number" min={1} max={50} value={form.stampsRequired}
-              onChange={(e) => update("stampsRequired", parseInt(e.target.value))}
-              className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass}>Libellé de la récompense</label>
+              onChange={(e) => update("stampsRequired", parseInt(e.target.value))} className={inputClass} style={inputStyle} />
+          </Field>
+          <Field label="Libellé de la récompense">
             <input type="text" value={form.rewardLabel} onChange={(e) => update("rewardLabel", e.target.value)}
-              className={inputClass} placeholder="Café offert, -10% de réduction..." />
-          </div>
-        </div>
-
-        {/* Card design */}
-        <div className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-5">
-          <h2 className="text-lg font-bold text-white">Design de la carte</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>Couleur de fond</label>
-              <div className="flex items-center gap-3">
-                <input type="color" value={form.cardBgColor} onChange={(e) => update("cardBgColor", e.target.value)}
-                  className="w-12 h-10 rounded cursor-pointer border border-white/10 bg-transparent" />
-                <input type="text" value={form.cardBgColor} onChange={(e) => update("cardBgColor", e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
-              </div>
-            </div>
-            <div>
-              <label className={labelClass}>Couleur du texte</label>
-              <div className="flex items-center gap-3">
-                <input type="color" value={form.cardFgColor} onChange={(e) => update("cardFgColor", e.target.value)}
-                  className="w-12 h-10 rounded cursor-pointer border border-white/10 bg-transparent" />
-                <input type="text" value={form.cardFgColor} onChange={(e) => update("cardFgColor", e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
-              </div>
-            </div>
-            <div>
-              <label className={labelClass}>Couleur d&apos;accent</label>
-              <div className="flex items-center gap-3">
-                <input type="color" value={form.cardAccentColor} onChange={(e) => update("cardAccentColor", e.target.value)}
-                  className="w-12 h-10 rounded cursor-pointer border border-white/10 bg-transparent" />
-                <input type="text" value={form.cardAccentColor} onChange={(e) => update("cardAccentColor", e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card preview */}
-          <div>
-            <label className={labelClass}>Aperçu de la carte</label>
-            <div className="rounded-2xl overflow-hidden border border-white/10 max-w-xs" style={{ background: `linear-gradient(135deg, ${form.cardBgColor}, ${form.cardBgColor}dd)` }}>
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest opacity-60" style={{ color: form.cardFgColor }}>Carte de fidélité</p>
-                    <p className="font-bold text-lg" style={{ color: form.cardFgColor }}>{form.name}</p>
-                  </div>
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background: form.cardAccentColor, color: "#000" }}>FP</div>
-                </div>
-                <div className="flex gap-2 flex-wrap mb-4">
-                  {Array.from({ length: Math.min(form.stampsRequired, 10) }).map((_, i) => (
-                    <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-xs"
-                      style={i < 5 ? { background: form.cardAccentColor, color: "#000" } : { border: `2px solid ${form.cardFgColor}33` }}>
-                      {i < 5 ? "★" : ""}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs" style={{ color: form.cardFgColor + "99" }}>Récompense : {form.rewardLabel}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+              className={inputClass} style={inputStyle} placeholder="Café offert, -10% de réduction..." />
+          </Field>
+        </Section>
 
         <button type="submit" disabled={saving}
-          className="w-full py-3 rounded-xl gold-gradient text-black font-bold text-lg hover:opacity-90 transition-opacity disabled:opacity-50">
-          {saving ? "Enregistrement..." : saved ? "✓ Enregistré !" : "Enregistrer les modifications"}
+          className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-40"
+          style={saved
+            ? { background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }
+            : { background: "#f59e0b", color: "#000" }
+          }
+        >
+          {saving ? "Enregistrement..." : saved ? "✓ Modifications enregistrées" : "Enregistrer les modifications"}
         </button>
       </form>
 
       {/* Abonnement */}
-      <div className="mt-8 p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
-        <h2 className="text-lg font-bold text-white">Abonnement</h2>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-slate-300 text-sm">Formule actuelle</p>
-            <p className="text-white font-semibold mt-0.5">
-              {plan === "STARTER" ? "Starter (gratuit)" : plan === "PRO" ? "Fidco Pro — 90€/mois" : "Fidco Business — 130€/mois"}
-            </p>
-          </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-bold ${plan === "STARTER" ? "bg-slate-700 text-slate-300" : "bg-amber-500/20 text-amber-400"}`}>
-            {plan === "STARTER" ? "Gratuit" : "Actif"}
-          </span>
+      <div className="mt-4 rounded-xl overflow-hidden" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+        <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Abonnement</p>
         </div>
+        <div className="px-5 py-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-semibold text-white">
+                {plan === "STARTER" ? "Starter" : plan === "PRO" ? "Fidco Pro" : "Fidco Business"}
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                {plan === "STARTER" ? "Gratuit — fonctionnalités limitées" : plan === "PRO" ? "90 € / mois" : "130 € / mois"}
+              </p>
+            </div>
+            <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
+              style={plan === "STARTER"
+                ? { background: "var(--surface-2)", color: "var(--text-muted)", border: "1px solid var(--border)" }
+                : { background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" }
+              }
+            >
+              {plan === "STARTER" ? "Gratuit" : "Actif"}
+            </span>
+          </div>
 
-        {plan === "STARTER" ? (
-          <Link href="/tarifs" className="block text-center py-3 px-6 rounded-xl gold-gradient text-black font-bold text-sm hover:opacity-90 transition-opacity">
-            Passer à Pro — 7 jours gratuits
-          </Link>
-        ) : (
-          <button
-            onClick={async () => {
-              setPortalLoading(true);
-              const res = await fetch("/api/stripe/portal", { method: "POST" });
-              const { url } = await res.json();
-              window.location.href = url;
-            }}
-            disabled={portalLoading}
-            className="w-full py-3 px-6 rounded-xl border border-white/20 text-white font-semibold text-sm hover:bg-white/5 transition-colors disabled:opacity-50"
-          >
-            {portalLoading ? "Chargement..." : "Gérer mon abonnement (factures, annulation, CB)"}
-          </button>
-        )}
+          {plan === "STARTER" ? (
+            <Link href="/tarifs"
+              className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold gold-gradient text-black hover:opacity-90 transition-opacity">
+              Passer à Pro — 7 jours gratuits
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                <polyline points="9 18 15 12 9 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          ) : (
+            <button
+              onClick={async () => {
+                setPortalLoading(true);
+                const res = await fetch("/api/stripe/portal", { method: "POST" });
+                const { url } = await res.json();
+                window.location.href = url;
+              }}
+              disabled={portalLoading}
+              className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+              style={{ background: "var(--surface-2)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+            >
+              {portalLoading ? "Chargement..." : "Gérer mon abonnement"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -28,13 +28,8 @@ export default function ScannerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const scannerRef = useRef<any>(null);
-  const videoRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    return () => {
-      stopScanner();
-    };
-  }, []);
+  useEffect(() => { return () => { stopScanner(); }; }, []);
 
   async function startScanner() {
     setCameraError("");
@@ -44,72 +39,40 @@ export default function ScannerPage() {
       const { Html5Qrcode } = await import("html5-qrcode");
       const scanner = new Html5Qrcode("qr-video");
       scannerRef.current = scanner;
-
       const onScan = async (decodedText: string) => {
         await stopScanner();
         setScanning(false);
         await identifyCard(decodedText.trim());
       };
-
-      // Essai caméra arrière d'abord, puis avant en fallback
       try {
-        await scanner.start(
-          { facingMode: "environment" },
-          { fps: 15, qrbox: { width: 220, height: 220 } },
-          onScan,
-          () => {}
-        );
+        await scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 220, height: 220 } }, onScan, () => {});
       } catch {
-        await scanner.start(
-          { facingMode: "user" },
-          { fps: 15, qrbox: { width: 220, height: 220 } },
-          onScan,
-          () => {}
-        );
+        await scanner.start({ facingMode: "user" }, { fps: 15, qrbox: { width: 220, height: 220 } }, onScan, () => {});
       }
     } catch (err: any) {
       setScanning(false);
       const msg = err?.message ?? "";
-      if (msg.includes("NotAllowedError") || msg.includes("Permission") || msg.includes("permission")) {
-        setCameraError("permission_denied");
-      } else if (msg.includes("NotFoundError") || msg.includes("not found")) {
-        setCameraError("no_camera");
-      } else {
-        setCameraError("other");
-      }
+      if (msg.includes("NotAllowedError") || msg.includes("permission")) setCameraError("permission_denied");
+      else if (msg.includes("NotFoundError") || msg.includes("not found")) setCameraError("no_camera");
+      else setCameraError("other");
     }
   }
 
   async function stopScanner() {
     if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-        await scannerRef.current.clear();
-      } catch {}
+      try { await scannerRef.current.stop(); await scannerRef.current.clear(); } catch {}
       scannerRef.current = null;
     }
   }
 
   async function identifyCard(serialNumber: string) {
-    setResult(null);
-    setError("");
-    setCardInfo(null);
+    setResult(null); setError(""); setCardInfo(null);
     try {
-      const res = await fetch("/api/cards/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serialNumber }),
-      });
+      const res = await fetch("/api/cards/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ serialNumber }) });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Erreur lors du scan");
-      } else {
-        setCardInfo(data);
-        setAmount("");
-      }
-    } catch {
-      setError("Erreur de connexion");
-    }
+      if (!res.ok) setError(data.error || "Carte non reconnue");
+      else { setCardInfo(data); setAmount(""); }
+    } catch { setError("Erreur de connexion"); }
   }
 
   async function handleValidateAmount(e: React.FormEvent) {
@@ -117,22 +80,11 @@ export default function ScannerPage() {
     if (!cardInfo || !amount) return;
     setSubmitting(true);
     try {
-      const res = await fetch("/api/cards/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serialNumber: cardInfo.serialNumber, amount: parseFloat(amount) }),
-      });
+      const res = await fetch("/api/cards/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ serialNumber: cardInfo.serialNumber, amount: parseFloat(amount) }) });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Erreur lors de la validation");
-      } else {
-        setResult(data);
-        setCardInfo(null);
-        setAmount("");
-      }
-    } catch {
-      setError("Erreur de connexion");
-    }
+      if (!res.ok) setError(data.error || "Erreur lors de la validation");
+      else { setResult(data); setCardInfo(null); setAmount(""); }
+    } catch { setError("Erreur de connexion"); }
     setSubmitting(false);
   }
 
@@ -143,61 +95,70 @@ export default function ScannerPage() {
     setManualSerial("");
   }
 
-  function reset() {
-    setResult(null);
-    setCardInfo(null);
-    setError("");
-    setAmount("");
-  }
+  function reset() { setResult(null); setCardInfo(null); setError(""); setAmount(""); }
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-md mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Scanner</h1>
-        <p className="text-slate-400 text-sm mt-0.5">Scannez la carte et entrez le montant</p>
+        <h1 className="text-xl font-semibold text-white">Scanner</h1>
+        <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>Scannez la carte QR du client et saisissez le montant</p>
       </div>
 
       {/* Étape 2 : saisie montant */}
       {cardInfo && !result && (
-        <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 mb-4">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-12 h-12 rounded-full gold-gradient flex items-center justify-center text-black font-bold text-lg">
+        <div className="rounded-xl p-5 mb-4 fade-in" style={{ background: "var(--surface-1)", border: "1px solid rgba(245,158,11,0.2)" }}>
+          <div className="flex items-center gap-3 mb-5 pb-4" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-black font-bold">
               {cardInfo.customerName[0]}
             </div>
             <div>
-              <p className="text-lg font-bold text-white">{cardInfo.customerName}</p>
-              <p className="text-amber-400 text-sm">{cardInfo.points} points</p>
+              <p className="text-sm font-semibold text-white">{cardInfo.customerName}</p>
+              <p className="text-xs mt-0.5" style={{ color: "#f59e0b" }}>{cardInfo.points} points</p>
             </div>
           </div>
+
           <form onSubmit={handleValidateAmount} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Montant de la commande (€)
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
+                Montant de la commande
               </label>
-              <input
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                autoFocus
-                className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white text-3xl font-bold placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors text-center"
-              />
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  autoFocus
+                  className="w-full px-4 py-4 rounded-xl text-white text-4xl font-bold text-center transition-colors"
+                  style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold" style={{ color: "var(--text-muted)" }}>€</span>
+              </div>
             </div>
+
             {amount && parseFloat(amount) > 0 && (
-              <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-slate-400 text-xs mb-1">Points à ajouter</p>
-                <p className="text-3xl font-black text-amber-400">+{Math.round(parseFloat(amount))} pts</p>
+              <div className="rounded-lg px-4 py-3 text-center" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.15)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Points à créditer</p>
+                <p className="text-2xl font-bold" style={{ color: "#f59e0b" }}>+{Math.round(parseFloat(amount))} pts</p>
               </div>
             )}
-            <div className="flex gap-3">
-              <button type="button" onClick={reset}
-                className="flex-1 py-3.5 rounded-xl border border-white/20 text-slate-400 font-medium hover:bg-white/5 transition-colors">
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={reset}
+                className="flex-1 py-3 rounded-xl text-sm font-medium transition-colors"
+                style={{ background: "var(--surface-2)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+              >
                 Annuler
               </button>
-              <button type="submit" disabled={submitting || !amount || parseFloat(amount) <= 0}
-                className="flex-1 py-3.5 rounded-xl gold-gradient text-black font-bold text-lg hover:opacity-90 transition-opacity disabled:opacity-50">
+              <button
+                type="submit"
+                disabled={submitting || !amount || parseFloat(amount) <= 0}
+                className="flex-1 py-3 rounded-xl gold-gradient text-black text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-40"
+              >
                 {submitting ? "..." : "Valider"}
               </button>
             </div>
@@ -207,41 +168,55 @@ export default function ScannerPage() {
 
       {/* Résultat */}
       {result && (
-        <div className={`p-5 rounded-2xl border mb-4 ${result.newlyUnlocked.length > 0 ? "border-green-500/30 bg-green-500/10" : "border-amber-500/30 bg-amber-500/10"}`}>
-          <div className="flex items-center gap-4 mb-4">
-            <span className="text-5xl">{result.newlyUnlocked.length > 0 ? "🎉" : "⭐"}</span>
+        <div className="rounded-xl p-5 mb-4 fade-in" style={{
+          background: "var(--surface-1)",
+          border: `1px solid ${result.newlyUnlocked.length > 0 ? "rgba(34,197,94,0.25)" : "rgba(245,158,11,0.2)"}`,
+        }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
+              style={{ background: result.newlyUnlocked.length > 0 ? "rgba(34,197,94,0.15)" : "rgba(245,158,11,0.15)", color: result.newlyUnlocked.length > 0 ? "#22c55e" : "#f59e0b" }}>
+              {result.newlyUnlocked.length > 0 ? "🏆" : "✓"}
+            </div>
             <div>
-              <p className="text-xl font-bold text-white">{result.customerName}</p>
-              <p className={`text-base font-medium ${result.newlyUnlocked.length > 0 ? "text-green-400" : "text-amber-400"}`}>
+              <p className="text-sm font-semibold text-white">{result.customerName}</p>
+              <p className="text-xs mt-0.5" style={{ color: result.newlyUnlocked.length > 0 ? "#22c55e" : "#f59e0b" }}>
                 {result.message}
               </p>
             </div>
           </div>
+
           {result.newlyUnlocked.length > 0 && (
-            <div className="mb-4 p-4 rounded-xl bg-green-500/20 border border-green-500/30">
-              <p className="text-green-300 font-bold text-sm mb-2">🏆 Récompense débloquée !</p>
+            <div className="rounded-lg p-3 mb-4" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+              <p className="text-xs font-semibold mb-1.5" style={{ color: "#22c55e" }}>Récompense débloquée</p>
               {result.newlyUnlocked.map((r) => (
-                <p key={r.id} className="text-green-200 text-sm">• {r.name}</p>
+                <p key={r.id} className="text-xs text-white">• {r.name}</p>
               ))}
             </div>
           )}
+
           {result.nextReward && (
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10 mb-4">
-              <div className="flex justify-between mb-1">
-                <p className="text-slate-400 text-xs">Prochaine récompense</p>
-                <p className="text-amber-400 text-xs font-bold">
+            <div className="rounded-lg p-3 mb-4" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+              <div className="flex justify-between items-center mb-1.5">
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Prochaine récompense</p>
+                <p className="text-xs font-semibold" style={{ color: "#f59e0b" }}>
                   {result.nextReward.pointsRequired - result.newPoints} pts restants
                 </p>
               </div>
-              <p className="text-white text-sm font-medium">{result.nextReward.name}</p>
-              <div className="h-1.5 rounded-full bg-white/10 mt-2 overflow-hidden">
-                <div className="h-full rounded-full bg-amber-400 transition-all"
-                  style={{ width: `${Math.min(100, (result.newPoints / result.nextReward.pointsRequired) * 100)}%` }} />
+              <p className="text-xs font-medium text-white mb-2">{result.nextReward.name}</p>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${Math.min(100, (result.newPoints / result.nextReward.pointsRequired) * 100)}%`, background: "#f59e0b" }}
+                />
               </div>
             </div>
           )}
-          <button onClick={reset}
-            className="w-full py-3 rounded-xl border border-white/20 text-slate-400 text-sm hover:bg-white/5 transition-colors">
+
+          <button
+            onClick={reset}
+            className="w-full py-2.5 rounded-xl text-xs font-medium transition-colors"
+            style={{ background: "var(--surface-2)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+          >
             Scanner une autre carte
           </button>
         </div>
@@ -249,32 +224,27 @@ export default function ScannerPage() {
 
       {/* Erreur caméra */}
       {cameraError && (
-        <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/10 mb-4">
+        <div className="rounded-xl p-4 mb-4" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
           {cameraError === "permission_denied" && (
             <>
-              <p className="text-red-400 font-bold mb-2">🚫 Accès à la caméra refusé</p>
-              <p className="text-slate-300 text-sm mb-3">Pour autoriser la caméra :</p>
-              <div className="space-y-1.5 text-sm text-slate-400 mb-4">
-                <p>• <strong className="text-white">iPhone</strong> → Réglages → Safari → Caméra → Autoriser</p>
-                <p>• <strong className="text-white">Android</strong> → Paramètres → Applis → Chrome → Autorisations → Caméra</p>
-                <p>• <strong className="text-white">Sur la page</strong> → appuyez sur l&apos;icône 🔒 dans la barre d&apos;adresse</p>
+              <p className="text-sm font-semibold text-red-400 mb-2">Accès caméra refusé</p>
+              <div className="space-y-1 text-xs mb-3" style={{ color: "var(--text-secondary)" }}>
+                <p>• iPhone → Réglages → Safari → Caméra → Autoriser</p>
+                <p>• Android → Paramètres → Chrome → Autorisations → Caméra</p>
               </div>
             </>
           )}
           {cameraError === "no_camera" && (
-            <>
-              <p className="text-red-400 font-bold mb-2">📷 Aucune caméra détectée</p>
-              <p className="text-slate-400 text-sm mb-3">Utilisez la saisie manuelle du numéro de série ci-dessous.</p>
-            </>
+            <p className="text-sm font-semibold text-red-400 mb-2">Aucune caméra détectée — utilisez la saisie manuelle</p>
           )}
           {cameraError === "other" && (
-            <>
-              <p className="text-red-400 font-bold mb-2">❌ Erreur caméra</p>
-              <p className="text-slate-400 text-sm mb-3">Vérifiez que la caméra n&apos;est pas utilisée par une autre application.</p>
-            </>
+            <p className="text-sm font-semibold text-red-400 mb-2">Erreur caméra — vérifiez qu&apos;elle n&apos;est pas utilisée</p>
           )}
-          <button onClick={() => setCameraError("")}
-            className="w-full py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+          <button
+            onClick={() => setCameraError("")}
+            className="w-full py-2 rounded-lg text-xs font-medium transition-colors"
+            style={{ background: "var(--surface-2)", color: "var(--text-secondary)" }}
+          >
             Réessayer
           </button>
         </div>
@@ -282,40 +252,51 @@ export default function ScannerPage() {
 
       {/* Erreur scan */}
       {error && (
-        <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 mb-4 text-sm">
+        <div className="rounded-lg p-3 mb-4 text-xs text-red-400" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
           {error}
-          <button onClick={() => setError("")} className="block mt-2 underline">Réessayer</button>
+          <button onClick={() => setError("")} className="block mt-1 underline" style={{ color: "var(--text-muted)" }}>Réessayer</button>
         </div>
       )}
 
       {!cardInfo && !result && (
         <>
           {/* Caméra */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden mb-4">
+          <div className="rounded-xl overflow-hidden mb-4" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
             {!scanning ? (
-              <button onClick={startScanner}
-                className="w-full py-16 flex flex-col items-center justify-center gap-3 hover:bg-white/5 transition-colors">
-                <span className="text-6xl">📷</span>
-                <span className="text-white font-bold text-lg">Scanner un QR code</span>
-                <span className="text-slate-400 text-sm">Appuyez pour activer la caméra</span>
+              <button
+                onClick={startScanner}
+                className="w-full py-14 flex flex-col items-center justify-center gap-4 hover:bg-white/[0.025] transition-colors"
+              >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "var(--surface-3)", color: "#f59e0b" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-7 h-7">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-white">Activer la caméra</p>
+                  <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Scanner le QR code du client</p>
+                </div>
               </button>
             ) : (
               <div className="relative">
                 <div id="qr-video" className="w-full" style={{ minHeight: "300px" }} />
-                {/* Viseur */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-52 h-52 relative">
-                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-amber-400 rounded-tl-lg" />
-                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-amber-400 rounded-tr-lg" />
-                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-amber-400 rounded-bl-lg" />
-                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-amber-400 rounded-br-lg" />
+                    <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-amber-400 rounded-tl-md" />
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-amber-400 rounded-tr-md" />
+                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-amber-400 rounded-bl-md" />
+                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-amber-400 rounded-br-md" />
                   </div>
                 </div>
-                <button onClick={() => { stopScanner(); setScanning(false); }}
-                  className="absolute top-3 right-3 px-4 py-2 rounded-xl bg-black/60 text-white text-sm font-medium backdrop-blur-sm">
+                <button
+                  onClick={() => { stopScanner(); setScanning(false); }}
+                  className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-xs font-medium backdrop-blur-sm"
+                  style={{ background: "rgba(0,0,0,0.6)", color: "white", border: "1px solid rgba(255,255,255,0.15)" }}
+                >
                   Annuler
                 </button>
-                <p className="absolute bottom-4 left-0 right-0 text-center text-white/70 text-sm">
+                <p className="absolute bottom-4 left-0 right-0 text-center text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
                   Centrez le QR code dans le cadre
                 </p>
               </div>
@@ -323,18 +304,23 @@ export default function ScannerPage() {
           </div>
 
           {/* Saisie manuelle */}
-          <div className="p-5 rounded-2xl border border-white/10 bg-white/5">
-            <h2 className="text-sm font-bold text-slate-400 mb-3 uppercase tracking-wider">Saisie manuelle</h2>
+          <div className="rounded-xl p-4" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--text-muted)" }}>
+              Saisie manuelle
+            </p>
             <form onSubmit={handleManualSubmit} className="flex gap-2">
               <input
                 type="text"
                 value={manualSerial}
                 onChange={(e) => setManualSerial(e.target.value)}
                 placeholder="Numéro de série..."
-                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors font-mono text-sm"
+                className="flex-1 px-3 py-2.5 rounded-lg text-white text-sm font-mono transition-colors"
+                style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
               />
-              <button type="submit"
-                className="px-5 py-3 rounded-xl gold-gradient text-black font-bold hover:opacity-90 transition-opacity">
+              <button
+                type="submit"
+                className="px-4 py-2.5 rounded-lg gold-gradient text-black text-sm font-bold hover:opacity-90 transition-opacity"
+              >
                 OK
               </button>
             </form>
