@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
+
 
 const inputClass = "w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-slate-600 transition-colors focus:outline-none";
 const inputStyle = { background: "var(--surface-2)", border: "1px solid var(--border)" };
@@ -32,11 +32,8 @@ export default function ParametresPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [plan, setPlan] = useState<string>("STARTER");
-  const [portalLoading, setPortalLoading] = useState(false);
-
+  
   useEffect(() => {
-    fetch("/api/user/plan").then(r => r.json()).then(d => setPlan(d.plan ?? "STARTER"));
     fetch("/api/business").then((r) => r.json()).then((b) => {
       setBusiness(b);
       setForm({
@@ -117,57 +114,6 @@ export default function ParametresPage() {
           {saving ? "Enregistrement..." : saved ? "✓ Modifications enregistrées" : "Enregistrer les modifications"}
         </button>
       </form>
-
-      {/* Abonnement */}
-      <div className="mt-4 rounded-xl overflow-hidden" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
-        <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Abonnement</p>
-        </div>
-        <div className="px-5 py-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-semibold text-white">
-                {plan === "STARTER" ? "Starter" : plan === "PRO" ? "Fidco Pro" : "Fidco Business"}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                {plan === "STARTER" ? "Gratuit — fonctionnalités limitées" : plan === "PRO" ? "90 € / mois" : "130 € / mois"}
-              </p>
-            </div>
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
-              style={plan === "STARTER"
-                ? { background: "var(--surface-2)", color: "var(--text-muted)", border: "1px solid var(--border)" }
-                : { background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" }
-              }
-            >
-              {plan === "STARTER" ? "Gratuit" : "Actif"}
-            </span>
-          </div>
-
-          {plan === "STARTER" ? (
-            <Link href="/tarifs"
-              className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold gold-gradient text-black hover:opacity-90 transition-opacity">
-              Passer à Pro — 7 jours gratuits
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
-                <polyline points="9 18 15 12 9 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
-          ) : (
-            <button
-              onClick={async () => {
-                setPortalLoading(true);
-                const res = await fetch("/api/stripe/portal", { method: "POST" });
-                const { url } = await res.json();
-                window.location.href = url;
-              }}
-              disabled={portalLoading}
-              className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
-              style={{ background: "var(--surface-2)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
-            >
-              {portalLoading ? "Chargement..." : "Gérer mon abonnement"}
-            </button>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
