@@ -26,6 +26,24 @@ export async function POST(request: NextRequest) {
   if (card.businessId !== business.id) return NextResponse.json({ error: "Carte invalide pour ce commerce" }, { status: 403 });
   if (!card.isActive) return NextResponse.json({ error: "Carte inactive" }, { status: 400 });
 
+  // Anti-abus : vérifier le délai minimum entre deux scans (30 min)
+  if (amount !== undefined && amount !== null) {
+    const lastScan = await prisma.scanEvent.findFirst({
+      where: { cardId: card.id },
+      orderBy: { scannedAt: "desc" },
+    });
+    if (lastScan) {
+      const diffMinutes = (Date.now() - new Date(lastScan.scannedAt).getTime()) / (1000 * 60);
+      if (diffMinutes < 30) {
+        const remaining = Math.ceil(30 - diffMinutes);
+        return NextResponse.json(
+          { error: `Cette carte a déjà été scannée il y a moins de 30 minutes. Réessayez dans ${remaining} minute${remaining > 1 ? "s" : ""}.`, cooldown: true, remainingMinutes: remaining },
+          { status: 429 }
+        );
+      }
+    }
+  }
+
   // If no amount provided, just return customer info (step 1)
   if (amount === undefined || amount === null) {
     return NextResponse.json({

@@ -69,6 +69,13 @@ function Icon({ name, className = "w-4 h-4" }: { name: string; className?: strin
         <path d="M5 15h4M14 15h5" strokeLinecap="round" />
       </svg>
     ),
+    megaphone: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+        <path d="M3 11v2a6 6 0 0 0 6 6h1" strokeLinecap="round" />
+        <path d="M11 3L1 9v6l10 6V3z" />
+        <path d="M11 3l10 3v12l-10 3" strokeLinecap="round" />
+      </svg>
+    ),
     logout: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeLinecap="round" />
@@ -104,6 +111,7 @@ const navItems = [
   { href: "/dashboard/scanner", label: "Scanner", icon: "scan" },
   { href: "/dashboard/carte", label: "Ma carte", icon: "card" },
   { href: "/dashboard/recompenses", label: "Récompenses", icon: "gift" },
+  { href: "/dashboard/campagnes", label: "Campagnes", icon: "megaphone" },
   { href: "/dashboard/notifications", label: "Notifications", icon: "bell" },
   { href: "/dashboard/abonnement", label: "Abonnement", icon: "credit" },
   { href: "/dashboard/parametres", label: "Paramètres", icon: "settings" },

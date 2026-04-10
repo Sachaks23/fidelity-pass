@@ -25,6 +25,13 @@ interface Analytics {
   inactiveCount: number;
 }
 
+interface OnboardingData {
+  steps: Array<{ id: string; label: string; done: boolean; href: string }>;
+  completedCount: number;
+  total: number;
+  allDone: boolean;
+}
+
 function StatCard({
   label,
   value,
@@ -76,9 +83,11 @@ export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [business, setBusiness] = useState<any>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingData | null>(null);
 
   useEffect(() => {
     fetch("/api/business").then((r) => r.json()).then(setBusiness).catch(console.error);
+    fetch("/api/onboarding").then((r) => r.json()).then(setOnboarding).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -165,6 +174,57 @@ export default function DashboardPage() {
           >
             Voir
           </Link>
+        </div>
+      )}
+
+      {/* Widget onboarding */}
+      {onboarding && !onboarding.allDone && (
+        <div className="rounded-xl p-5 mb-5" style={{ background: "var(--surface-1)", border: "1px solid rgba(245,158,11,0.15)" }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-semibold text-white">Configurez votre espace</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                {onboarding.completedCount}/{onboarding.total} étapes complétées
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-24 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${(onboarding.completedCount / onboarding.total) * 100}%`, background: "linear-gradient(90deg, #f59e0b, #fbbf24)" }}
+                />
+              </div>
+              <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>
+                {Math.round((onboarding.completedCount / onboarding.total) * 100)}%
+              </span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {onboarding.steps.map((step) => (
+              <Link
+                key={step.id}
+                href={step.href}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors hover:bg-white/[0.03]"
+                style={{ background: "var(--surface-2)", border: `1px solid ${step.done ? "rgba(52,211,153,0.15)" : "var(--border)"}` }}
+              >
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: step.done ? "rgba(52,211,153,0.15)" : "rgba(255,255,255,0.05)" }}
+                >
+                  {step.done ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth={2.5} className="w-3 h-3">
+                      <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : (
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--text-muted)" }} />
+                  )}
+                </div>
+                <span className="text-xs font-medium" style={{ color: step.done ? "#34d399" : "var(--text-secondary)" }}>
+                  {step.label}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
