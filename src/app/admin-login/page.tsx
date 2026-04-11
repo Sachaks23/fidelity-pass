@@ -7,6 +7,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +20,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin-auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, rememberMe }),
       });
 
       if (res.ok) {
@@ -136,6 +137,17 @@ export default function AdminLoginPage() {
               }}
             />
           </div>
+
+          {/* Remember me */}
+          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              style={{ width: "14px", height: "14px", accentColor: "#3b82f6", cursor: "pointer" }}
+            />
+            <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Rester connecté 30 jours</span>
+          </label>
 
           {error && (
             <p

@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body as { email: string; password: string };
+    const { email, password, rememberMe } = body as { email: string; password: string; rememberMe?: boolean };
 
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPassword = process.env.ADMIN_PASSWORD;
@@ -26,11 +26,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const sessionDuration = rememberMe ? 30 * 24 * 60 * 60 : 8 * 60 * 60; // 30j ou 8h
+
     // Generate JWT
     const token = jwt.sign(
       { role: "ADMIN", email },
       adminSessionSecret,
-      { expiresIn: "8h" }
+      { expiresIn: sessionDuration }
     );
 
     const response = NextResponse.json({ success: true });
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 8 * 60 * 60, // 8 hours in seconds
+      maxAge: sessionDuration,
       path: "/",
     });
 
