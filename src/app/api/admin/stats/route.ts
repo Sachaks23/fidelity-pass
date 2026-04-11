@@ -3,12 +3,32 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  // Check admin-token JWT cookie first
+  let isAdminJwt = false;
+  try {
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get("admin-token")?.value;
+    const secret = process.env.ADMIN_SESSION_SECRET;
+    if (adminToken && secret) {
+      const payload = jwt.verify(adminToken, secret) as { role: string };
+      if (payload.role === "ADMIN") {
+        isAdminJwt = true;
+      }
+    }
+  } catch {
+    // Invalid token — fall through to NextAuth check
+  }
 
-  if (!session || (session.user as any).role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!isAdminJwt) {
+    // Fallback: NextAuth session
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   // Fetch all PROFESSIONAL users with their business and loyalty card counts
