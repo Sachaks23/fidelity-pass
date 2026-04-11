@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 function getPlanFromPriceId(priceId: string): string {
   if (priceId === PLANS.PRO.priceId) return "PRO";
-  if (priceId === PLANS.BUSINESS.priceId) return "BUSINESS";
+  if (priceId === PLANS.PRO_ANNUAL.priceId) return "PRO";
   return "STARTER";
 }
 
