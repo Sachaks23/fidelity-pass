@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import PinGate from "@/components/PinGate";
 import { useEffect } from "react";
+import FidcoLogo from "@/components/FidcoLogo";
 
 const tabs = [
   { href: "/espace-client", label: "Mes cartes", icon: "💳" },
@@ -35,7 +36,7 @@ export default function EspaceClientLayout({ children }: { children: React.React
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-white/10 px-4 py-3 flex items-center justify-between bg-[#0f172a]/95 backdrop-blur-md">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center text-black font-bold text-xs">FC</div>
+          <FidcoLogo size={32} />
           <span className="font-bold text-white text-sm">Fidco</span>
         </div>
         <div className="flex items-center gap-2">

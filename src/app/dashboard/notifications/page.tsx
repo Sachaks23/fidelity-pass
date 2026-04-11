@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import FidcoLogo from "@/components/FidcoLogo";
 
 type Tab = "email" | "push";
 
@@ -175,7 +176,7 @@ export default function NotificationsPage() {
                       <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Aperçu</p>
                       <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
                         <div className="px-3 py-2 flex items-center gap-2 gold-gradient">
-                          <span className="font-bold text-black text-xs">FC</span>
+                          <FidcoLogo size={20} />
                           <span className="text-black text-xs font-semibold">Fidco</span>
                         </div>
                         <div className="p-3" style={{ background: "var(--surface-1)" }}>
@@ -260,7 +261,7 @@ export default function NotificationsPage() {
                     <div className="rounded-lg p-3" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
                       <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Aperçu</p>
                       <div className="flex gap-3 items-start">
-                        <div className="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center text-black font-bold text-xs flex-shrink-0">FC</div>
+                        <FidcoLogo size={36} className="flex-shrink-0" />
                         <div>
                           <p className="text-sm font-semibold text-white leading-tight">{pushTitle || "Titre"}</p>
                           <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{pushMessage || "Message..."}</p>

@@ -5,6 +5,7 @@ import { signOut, useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState, useEffect } from "react";
 import PinGate from "@/components/PinGate";
+import FidcoLogo from "@/components/FidcoLogo";
 
 // SVG Icons
 function Icon({ name, className = "w-4 h-4" }: { name: string; className?: string }) {
@@ -186,7 +187,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Logo */}
           <div className="px-5 h-14 flex items-center justify-between flex-shrink-0" style={{ borderBottom: "1px solid var(--border)" }}>
             <Link href="/dashboard" className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg gold-gradient flex items-center justify-center text-black font-bold text-xs">FC</div>
+              <FidcoLogo size={28} />
               <span className="font-semibold text-white text-sm tracking-tight">Fidco</span>
             </Link>
             <button
@@ -261,7 +262,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Icon name="menu" className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md gold-gradient flex items-center justify-center text-black font-bold text-xs">FC</div>
+              <FidcoLogo size={24} />
               <span className="font-semibold text-white text-sm">Fidco</span>
             </div>
           </div>

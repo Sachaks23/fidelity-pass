@@ -4,7 +4,7 @@
     {
       "name": "fidelity-pass",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--hostname", "0.0.0.0"],
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
     }
   ]

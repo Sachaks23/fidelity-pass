@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import type { Badge } from "@/lib/badges";
+import FidcoLogo from "@/components/FidcoLogo";
 
 interface Reward {
   id: string;
@@ -316,7 +317,7 @@ export default function MesCartesPage() {
 
       {cards.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-dashed border-white/10">
-          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-2xl mx-auto mb-4">FC</div>
+          <FidcoLogo size={64} className="mx-auto mb-4" />
           <h2 className="text-lg font-bold text-white mb-2">Aucune carte</h2>
           <p className="text-slate-400 text-sm">Scannez le QR code d&apos;un commerce partenaire.</p>
         </div>

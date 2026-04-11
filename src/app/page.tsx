@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import PricingSection from "@/components/PricingSection";
+import FidcoLogo from "@/components/FidcoLogo";
 
 const features = [
   {
@@ -107,9 +108,7 @@ export default async function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0f172a]/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center text-black font-bold text-sm select-none">
-              FC
-            </div>
+            <FidcoLogo size={32} />
             <span className="font-bold text-xl tracking-tight">Fidco</span>
           </Link>
           <div className="flex items-center gap-3">
@@ -187,9 +186,7 @@ export default async function LandingPage() {
                   {/* App header */}
                   <div className="px-4 pt-3 pb-2 bg-slate-900/50">
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="w-6 h-6 rounded-md gold-gradient flex items-center justify-center text-black font-bold text-xs">
-                        FC
-                      </div>
+                      <FidcoLogo size={24} />
                       <span className="text-xs font-semibold text-white">Fidco</span>
                     </div>
                     <p className="text-xs text-slate-400">Bonjour, Sophie</p>
@@ -207,9 +204,7 @@ export default async function LandingPage() {
                           </p>
                           <p className="text-white font-bold text-sm mt-0.5">Le Petit Bistrot</p>
                         </div>
-                        <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-black font-bold text-xs">
-                          FC
-                        </div>
+                        <FidcoLogo size={32} />
                       </div>
                       <div className="mb-3">
                         <div className="flex items-end gap-1 mb-2">
@@ -354,9 +349,7 @@ export default async function LandingPage() {
       <footer className="border-t border-white/10 py-10 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md gold-gradient flex items-center justify-center text-black font-bold text-xs">
-              FC
-            </div>
+            <FidcoLogo size={28} />
             <span className="font-bold text-white">Fidco</span>
           </Link>
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">

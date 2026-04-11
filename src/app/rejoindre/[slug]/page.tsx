@@ -2,6 +2,7 @@
 import { useState, use, useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+import FidcoLogo from "@/components/FidcoLogo";
 
 interface BusinessInfo {
   name: string;
@@ -98,7 +99,7 @@ function RejoindreInner({ params }: { params: Promise<{ slug: string }> }) {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-2xl mx-auto mb-6">FC</div>
+          <FidcoLogo size={64} className="mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-white mb-4">Bienvenue !</h1>
           <p className="text-slate-400 text-lg mb-2">
             Votre carte de fidélité chez <strong className="text-white">{business?.name || "votre commerce"}</strong> est prête.
@@ -125,7 +126,7 @@ function RejoindreInner({ params }: { params: Promise<{ slug: string }> }) {
       <div className="w-full max-w-md">
 
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-2xl mx-auto mb-4">FC</div>
+          <FidcoLogo size={64} className="mx-auto mb-4" />
           {business ? (
             <>
               <h1 className="text-3xl font-bold text-white">{business.name}</h1>
@@ -155,8 +156,7 @@ function RejoindreInner({ params }: { params: Promise<{ slug: string }> }) {
                 <p className="text-xs uppercase tracking-widest opacity-50" style={{ color: business.cardFgColor }}>Votre future carte</p>
                 <p className="font-bold" style={{ color: business.cardFgColor }}>{business.name}</p>
               </div>
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ background: business.cardAccentColor, color: "#000" }}>FC</div>
+              <FidcoLogo size={36} />
             </div>
             <div className="flex gap-2 flex-wrap mb-3">
               {Array.from({ length: business.stampsRequired }).map((_, i) => (

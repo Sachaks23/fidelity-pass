@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PricingSection from "@/components/PricingSection";
+import FidcoLogo from "@/components/FidcoLogo";
 
 export default function TarifsPage() {
   return (
@@ -19,9 +20,7 @@ export default function TarifsPage() {
         {/* Header */}
         <div className="text-center mb-4">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center text-black font-bold text-sm">
-              FC
-            </div>
+            <FidcoLogo size={32} />
             <span className="font-bold text-xl tracking-tight">Fidco</span>
           </Link>
         </div>
@@ -67,9 +66,7 @@ export default function TarifsPage() {
       <footer className="border-t border-white/10 py-8 px-4 mt-8">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md gold-gradient flex items-center justify-center text-black font-bold text-xs">
-              FC
-            </div>
+            <FidcoLogo size={28} />
             <span className="font-bold text-white text-sm">Fidco</span>
           </Link>
           <div className="flex items-center gap-5 text-sm text-slate-500">

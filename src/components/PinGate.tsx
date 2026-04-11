@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import FidcoLogo from "@/components/FidcoLogo";
 
 interface Props {
   children: React.ReactNode;
@@ -250,7 +251,7 @@ export default function PinGate({ children, storageKey }: Props) {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-2xl mx-auto mb-3">FC</div>
+          <FidcoLogo size={64} className="mx-auto mb-3" />
           <p className="text-white font-bold text-xl">Fidco</p>
         </div>
 

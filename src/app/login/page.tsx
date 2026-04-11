@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import FidcoLogo from "@/components/FidcoLogo";
 
 export default async function LoginChoicePage() {
   const session = await getServerSession(authOptions);
@@ -17,7 +18,7 @@ export default async function LoginChoicePage() {
         {/* Logo */}
         <div className="text-center mb-12">
           <Link href="/" className="inline-flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-lg">FC</div>
+            <FidcoLogo size={48} />
             <span className="font-bold text-3xl text-white">Fidco</span>
           </Link>
           <p className="text-slate-400 mt-3">À quel espace souhaitez-vous accéder ?</p>
