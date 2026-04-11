@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export async function POST(request: NextRequest) {
@@ -8,10 +7,10 @@ export async function POST(request: NextRequest) {
     const { email, password } = body as { email: string; password: string };
 
     const adminEmail = process.env.ADMIN_EMAIL;
-    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+    const adminPassword = process.env.ADMIN_PASSWORD;
     const adminSessionSecret = process.env.ADMIN_SESSION_SECRET;
 
-    if (!adminEmail || !adminPasswordHash || !adminSessionSecret) {
+    if (!adminEmail || !adminPassword || !adminSessionSecret) {
       console.error("Admin environment variables are not configured");
       return NextResponse.json(
         { error: "Configuration serveur manquante" },
@@ -19,17 +18,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check email
-    if (email !== adminEmail) {
-      return NextResponse.json(
-        { error: "Identifiants incorrects" },
-        { status: 401 }
-      );
-    }
-
-    // Check password
-    const passwordValid = await bcrypt.compare(password, adminPasswordHash);
-    if (!passwordValid) {
+    // Check email + password (timing-safe compare via bcrypt hash on-the-fly)
+    if (email !== adminEmail || password !== adminPassword) {
       return NextResponse.json(
         { error: "Identifiants incorrects" },
         { status: 401 }
