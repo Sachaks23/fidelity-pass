@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { computeBadges } from "@/lib/badges";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -20,9 +21,25 @@ export async function GET() {
         },
       },
       transactions: { orderBy: { createdAt: "desc" }, take: 20 },
+      scanEvents: { orderBy: { scannedAt: "desc" }, take: 1, select: { scannedAt: true } },
+      _count: { select: { scanEvents: true } },
     },
     orderBy: { issuedAt: "desc" },
   });
 
-  return NextResponse.json(cards);
+  const cardCount = cards.length;
+
+  const enrichedCards = cards.map((card) => {
+    const hasReferral = card.transactions.some((t) => t.type === "REFERRAL" && t.pointsDelta > 0 && t.note?.includes("Parrainage :"));
+    const badges = computeBadges({
+      scanCount: card._count.scanEvents,
+      totalPointsEarned: card.totalPointsEarned,
+      hasReferral,
+      cardCount,
+    });
+    const lastScanDate = card.scanEvents[0]?.scannedAt ?? null;
+    return { ...card, badges, lastScanDate, scanCount: card._count.scanEvents };
+  });
+
+  return NextResponse.json(enrichedCards);
 }
