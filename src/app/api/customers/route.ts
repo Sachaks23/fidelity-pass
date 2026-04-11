@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { businessSlug, firstName, lastName, email, phone, password } = body;
+    const { businessSlug, firstName, lastName, email, phone, password, referralCode } = body;
 
     if (!businessSlug || !firstName || !lastName || !email) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -120,6 +120,32 @@ export async function POST(request: NextRequest) {
         customerId: customer.id,
       },
     });
+
+    // Parrainage
+    if (referralCode) {
+      const referrerCard = await prisma.loyaltyCard.findFirst({
+        where: { serialNumber: referralCode, businessId: business.id },
+      });
+      if (referrerCard && referrerCard.id !== card.id) {
+        const bonus = (business as any).referralBonusPoints ?? 50;
+        await prisma.loyaltyCard.update({
+          where: { id: referrerCard.id },
+          data: {
+            points: { increment: bonus },
+            totalPointsEarned: { increment: bonus },
+            transactions: { create: { type: "REFERRAL", pointsDelta: bonus, note: `Parrainage : ${firstName} ${lastName} a rejoint le programme` } },
+          },
+        });
+        await prisma.loyaltyCard.update({
+          where: { id: card.id },
+          data: {
+            points: { increment: bonus },
+            totalPointsEarned: { increment: bonus },
+            transactions: { create: { type: "REFERRAL", pointsDelta: bonus, note: `Bonus de bienvenue parrainage` } },
+          },
+        });
+      }
+    }
 
     return NextResponse.json({ message: "Inscription réussie", card }, { status: 201 });
   } catch (error) {

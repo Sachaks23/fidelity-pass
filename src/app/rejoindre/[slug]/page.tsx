@@ -1,6 +1,7 @@
 "use client";
-import { useState, use, useEffect } from "react";
+import { useState, use, useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
 interface BusinessInfo {
   name: string;
@@ -14,8 +15,11 @@ interface BusinessInfo {
   rewardLabel: string;
 }
 
-export default function RejoindreBusinessPage({ params }: { params: Promise<{ slug: string }> }) {
+function RejoindreInner({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const searchParams = useSearchParams();
+  const referralCode = searchParams.get("ref");
+
   const [step, setStep] = useState<"form" | "loading" | "success">("form");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -29,7 +33,6 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
     password: "",
   });
 
-  // Charger les infos du commerce
   useEffect(() => {
     fetch(`/api/public/business/${slug}`)
       .then((r) => r.json())
@@ -48,11 +51,10 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
     setSubmitting(true);
     setError("");
 
-    // 1. Créer le compte + la carte
     const res = await fetch("/api/customers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ businessSlug: slug, ...form }),
+      body: JSON.stringify({ businessSlug: slug, ...form, referralCode: referralCode || undefined }),
     });
 
     const data = await res.json();
@@ -63,7 +65,6 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
       return;
     }
 
-    // 2. Auto-login
     setStep("loading");
     const loginResult = await signIn("credentials", {
       email: form.email,
@@ -72,10 +73,8 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
     });
 
     if (loginResult?.ok) {
-      // Redirection côté serveur via /go
       window.location.href = "/espace-client";
     } else {
-      // Login échoué (rare) — on montre quand même le succès avec lien vers login
       setStep("success");
     }
   }
@@ -83,12 +82,11 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
   const inputClass = "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors";
   const labelClass = "block text-sm font-medium text-slate-300 mb-2";
 
-  // Écran de chargement pendant l'auto-login
   if (step === "loading") {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="text-6xl mb-6 animate-bounce">🎁</div>
+          <div className="w-12 h-12 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
           <p className="text-white text-xl font-semibold">Création de votre carte...</p>
           <p className="text-slate-400 mt-2">Vous allez être redirigé automatiquement</p>
         </div>
@@ -96,16 +94,18 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
     );
   }
 
-  // Écran de succès (fallback si auto-login échoue)
   if (step === "success") {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="text-8xl mb-6">🎉</div>
-          <h1 className="text-4xl font-bold text-white mb-4">Bienvenue !</h1>
+          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-2xl mx-auto mb-6">FC</div>
+          <h1 className="text-3xl font-bold text-white mb-4">Bienvenue !</h1>
           <p className="text-slate-400 text-lg mb-2">
             Votre carte de fidélité chez <strong className="text-white">{business?.name || "votre commerce"}</strong> est prête.
           </p>
+          {referralCode && (
+            <p className="text-amber-400 text-sm mb-4">Points de bienvenue parrainage crédités !</p>
+          )}
           <p className="text-slate-500 text-sm mb-8">
             Connectez-vous pour voir votre carte et l&apos;ajouter à votre Wallet.
           </p>
@@ -124,20 +124,17 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
     <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
 
-        {/* En-tête avec nom du commerce */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-2xl mx-auto mb-4">FP</div>
+          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center text-black font-bold text-2xl mx-auto mb-4">FC</div>
           {business ? (
             <>
-              <h1 className="text-3xl font-bold text-white">
-                {business.name}
-              </h1>
+              <h1 className="text-3xl font-bold text-white">{business.name}</h1>
               <p className="text-amber-400 text-sm mt-1">{business.category}</p>
               {business.address && (
                 <p className="text-slate-500 text-xs mt-1">{business.address}</p>
               )}
               <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
-                🎁 Récompense : <strong>{business.rewardLabel}</strong> après {business.stampsRequired} tampons
+                Récompense : <strong>{business.rewardLabel}</strong> après {business.stampsRequired} tampons
               </div>
             </>
           ) : (
@@ -148,7 +145,6 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
           )}
         </div>
 
-        {/* Aperçu de la carte */}
         {business && (
           <div
             className="rounded-2xl p-5 mb-6 border border-white/10 shadow-xl"
@@ -160,7 +156,7 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
                 <p className="font-bold" style={{ color: business.cardFgColor }}>{business.name}</p>
               </div>
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ background: business.cardAccentColor, color: "#000" }}>FP</div>
+                style={{ background: business.cardAccentColor, color: "#000" }}>FC</div>
             </div>
             <div className="flex gap-2 flex-wrap mb-3">
               {Array.from({ length: business.stampsRequired }).map((_, i) => (
@@ -176,6 +172,12 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
           <h2 className="text-lg font-bold text-white mb-5">Créer mon compte gratuitement</h2>
+
+          {referralCode && (
+            <div className="p-3 rounded-lg mb-4 text-sm" style={{ background: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa" }}>
+              Vous êtes parrainé — vous recevrez des points bonus à l&apos;inscription !
+            </div>
+          )}
 
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-5">
@@ -219,7 +221,7 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
               disabled={submitting}
               className="w-full py-4 rounded-xl gold-gradient text-black font-bold text-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              {submitting ? "Création de votre carte..." : "Obtenir ma carte de fidélité 🎁"}
+              {submitting ? "Création de votre carte..." : "Obtenir ma carte de fidélité"}
             </button>
           </form>
 
@@ -230,5 +232,17 @@ export default function RejoindreBusinessPage({ params }: { params: Promise<{ sl
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RejoindreBusinessPage({ params }: { params: Promise<{ slug: string }> }) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <RejoindreInner params={params} />
+    </Suspense>
   );
 }

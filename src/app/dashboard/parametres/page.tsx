@@ -41,6 +41,8 @@ export default function ParametresPage() {
         description: b.description || "", cardBgColor: b.cardBgColor,
         cardFgColor: b.cardFgColor, cardAccentColor: b.cardAccentColor,
         stampsRequired: b.stampsRequired, rewardLabel: b.rewardLabel,
+        googleReviewUrl: (b as any).googleReviewUrl || "",
+        referralBonusPoints: (b as any).referralBonusPoints ?? 50,
       });
       setLoading(false);
     });
@@ -101,6 +103,17 @@ export default function ParametresPage() {
           <Field label="Libellé de la récompense">
             <input type="text" value={form.rewardLabel} onChange={(e) => update("rewardLabel", e.target.value)}
               className={inputClass} style={inputStyle} placeholder="Café offert, -10% de réduction..." />
+          </Field>
+        </Section>
+
+        <Section title="Croissance">
+          <Field label="Lien Google Review" hint="Affiché après chaque scan pour inviter le client à laisser un avis">
+            <input type="url" value={form.googleReviewUrl} onChange={(e) => update("googleReviewUrl", e.target.value)}
+              className={inputClass} style={inputStyle} placeholder="https://g.page/r/votre-id/review" />
+          </Field>
+          <Field label="Points de parrainage" hint="Points offerts au parrain et au filleul lors d'une inscription via lien de parrainage">
+            <input type="number" min={0} max={500} value={form.referralBonusPoints}
+              onChange={(e) => update("referralBonusPoints", parseInt(e.target.value))} className={inputClass} style={inputStyle} />
           </Field>
         </Section>
 

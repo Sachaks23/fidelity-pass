@@ -39,6 +39,10 @@ const statements = [
   `ALTER TABLE "ScanEvent" ADD COLUMN "pointsEarned" INTEGER NOT NULL DEFAULT 0`,
   // Card logo
   `ALTER TABLE "Business" ADD COLUMN "cardLogoUrl" TEXT`,
+  // Phase 3
+  `ALTER TABLE "Business" ADD COLUMN "googleReviewUrl" TEXT`,
+  `ALTER TABLE "Business" ADD COLUMN "referralBonusPoints" INTEGER NOT NULL DEFAULT 50`,
+  `CREATE TABLE IF NOT EXISTS "Promotion" ("id" TEXT NOT NULL PRIMARY KEY, "businessId" TEXT NOT NULL, "name" TEXT NOT NULL, "multiplier" REAL NOT NULL DEFAULT 2.0, "startDate" DATETIME NOT NULL, "endDate" DATETIME NOT NULL, "isActive" INTEGER NOT NULL DEFAULT 1, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "Promotion_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE RESTRICT ON UPDATE CASCADE)`,
   // Indexes
   `CREATE UNIQUE INDEX IF NOT EXISTS "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId")`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "Session_sessionToken_key" ON "Session"("sessionToken")`,

@@ -8,11 +8,23 @@ export async function POST(request: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const user = session.user as any;
+  const now = new Date();
+
   const business = await prisma.business.findUnique({
     where: { userId: user.id },
     include: { rewards: { where: { isActive: true }, orderBy: { pointsRequired: "asc" } } },
   });
   if (!business) return NextResponse.json({ error: "Commerce non trouvé" }, { status: 404 });
+
+  // Promotion active
+  const activePromotion = await (prisma as any).promotion.findFirst({
+    where: {
+      businessId: business.id,
+      isActive: true,
+      startDate: { lte: now },
+      endDate: { gte: now },
+    },
+  });
 
   const body = await request.json();
   const { serialNumber, amount } = body;
@@ -60,8 +72,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Montant invalide" }, { status: 400 });
   }
 
-  // Calculate points earned
-  const pointsEarned = Math.round(parsedAmount * business.pointsPerEuro);
+  // Calculate points earned (avec multiplicateur promo)
+  const basePoints = Math.round(parsedAmount * business.pointsPerEuro);
+  const pointsEarned = activePromotion ? Math.round(basePoints * activePromotion.multiplier) : basePoints;
   const newPoints = card.points + pointsEarned;
   const newTotalPointsEarned = card.totalPointsEarned + pointsEarned;
 
@@ -88,16 +101,15 @@ export async function POST(request: NextRequest) {
           amount: parsedAmount,
           note: newlyUnlocked.length > 0
             ? `Récompense débloquée : ${newlyUnlocked.map((r) => r.name).join(", ")}`
+            : activePromotion
+            ? `Promo ${activePromotion.name} (x${activePromotion.multiplier})`
             : undefined,
         },
       },
     },
   });
 
-  // Find next reward
   const nextReward = business.rewards.find((r) => r.pointsRequired > newPoints);
-
-  // Toutes les récompenses disponibles pour ce solde
   const redeemableRewards = business.rewards.filter((r) => r.pointsRequired <= newPoints);
 
   return NextResponse.json({
@@ -110,8 +122,12 @@ export async function POST(request: NextRequest) {
     newlyUnlocked,
     redeemableRewards,
     nextReward: nextReward ?? null,
+    activePromotion: activePromotion ? { name: activePromotion.name, multiplier: activePromotion.multiplier } : null,
+    googleReviewUrl: (business as any).googleReviewUrl ?? null,
     message: newlyUnlocked.length > 0
       ? `${pointsEarned} points ajoutés — Récompense débloquée : ${newlyUnlocked[0].name}`
+      : activePromotion
+      ? `${pointsEarned} pts ajoutés (x${activePromotion.multiplier} — ${activePromotion.name})`
       : `${pointsEarned} points ajoutés — Total : ${newPoints} pts`,
   });
 }

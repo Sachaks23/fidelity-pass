@@ -23,6 +23,8 @@ interface ScanResult {
   newlyUnlocked: Array<{ id: string; name: string; pointsRequired: number }>;
   redeemableRewards: Reward[];
   nextReward: { name: string; pointsRequired: number } | null;
+  activePromotion: { name: string; multiplier: number } | null;
+  googleReviewUrl: string | null;
   message: string;
 }
 
@@ -248,6 +250,15 @@ export default function ScannerPage() {
             </div>
           )}
 
+          {/* Promotion active */}
+          {result.activePromotion && (
+            <div className="rounded-lg p-3 mb-4" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.15)" }}>
+              <p className="text-xs font-semibold" style={{ color: "#f59e0b" }}>
+                Promotion en cours — {result.activePromotion.name} (x{result.activePromotion.multiplier})
+              </p>
+            </div>
+          )}
+
           {/* Message récompense utilisée */}
           {redeemMsg && (
             <div
@@ -306,6 +317,22 @@ export default function ScannerPage() {
                 />
               </div>
             </div>
+          )}
+
+          {/* Avis Google */}
+          {result.googleReviewUrl && (
+            <a
+              href={result.googleReviewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-xs font-medium mb-3 transition-colors"
+              style={{ background: "rgba(66,133,244,0.1)", color: "#4285f4", border: "1px solid rgba(66,133,244,0.2)" }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Laisser un avis Google
+            </a>
           )}
 
           <button

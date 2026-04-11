@@ -22,6 +22,7 @@ interface Transaction {
 
 interface ClientData {
   id: string;
+  serialNumber: string;
   points: number;
   totalPointsEarned: number;
   issuedAt: string;
@@ -205,6 +206,28 @@ export default function ClientDetailPage() {
                 <span className="text-sm font-semibold" style={{ color: highlight ? "#f59e0b" : "white" }}>{value}</span>
               </div>
             ))}
+          </div>
+
+          {/* Code de parrainage */}
+          <div className="rounded-xl p-4" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Code de parrainage</p>
+            <p className="text-xs mb-2.5" style={{ color: "var(--text-secondary)" }}>
+              À partager pour que ses amis s&apos;inscrivent et reçoivent des points bonus
+            </p>
+            <button
+              onClick={() => navigator.clipboard.writeText(client.serialNumber).catch(() => {})}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-white/5"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
+              title="Copier le code"
+            >
+              <p className="text-xs font-mono flex-1 text-left truncate" style={{ color: "#60a5fa" }}>
+                {client.serialNumber.slice(0, 16)}...
+              </p>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--text-muted)" }}>
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeLinecap="round" />
+              </svg>
+            </button>
           </div>
 
           {/* Progression */}

@@ -83,9 +83,11 @@ model Business {
   stampsRequired  Int      @default(10)
   rewardLabel     String   @default("Récompense offerte")
   pointsPerEuro   Float    @default(1.0)
-  description     String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  description         String?
+  googleReviewUrl     String?
+  referralBonusPoints Int      @default(50)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   user               User                @relation(fields: [userId], references: [id])
   loyaltyCards       LoyaltyCard[]
@@ -93,6 +95,7 @@ model Business {
   notifications      PushNotification[]
   emailNotifications EmailNotification[]
   rewards            Reward[]
+  promotions         Promotion[]
 }
 
 model Customer {
@@ -210,4 +213,17 @@ model PasswordResetToken {
   expires   DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model Promotion {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  multiplier Float    @default(2.0)
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
 }

@@ -38,6 +38,8 @@ export async function PATCH(request: NextRequest) {
       stampsRequired: body.stampsRequired,
       rewardLabel: body.rewardLabel,
       ...(body.pointsPerEuro !== undefined && { pointsPerEuro: parseFloat(body.pointsPerEuro) }),
+      ...(body.googleReviewUrl !== undefined && { googleReviewUrl: body.googleReviewUrl }),
+      ...(body.referralBonusPoints !== undefined && { referralBonusPoints: parseInt(body.referralBonusPoints) }),
     },
   });
 
