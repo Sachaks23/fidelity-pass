@@ -1,0 +1,15 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Losange -->
+  <path d="M100,8 L192,100 L100,192 L8,100 Z" fill="url(#g3)"/>
+  <!-- F centré dans le losange -->
+  <rect x="66" y="56" width="20" height="88" rx="4" fill="white"/>
+  <rect x="66" y="56" width="68" height="20" rx="4" fill="white"/>
+  <rect x="66" y="93" width="48" height="18" rx="4" fill="white"/>
+  <defs>
+    <linearGradient id="g3" x1="8" y1="8" x2="192" y2="192" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fde68a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+  </defs>
+</svg>

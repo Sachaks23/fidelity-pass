@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Fidco — Propositions Logo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 48px 32px;
+      color: white;
+    }
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: #f59e0b;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    p.sub {
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      margin-bottom: 48px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 32px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      transition: border-color .2s;
+    }
+    .card:hover { border-color: #f59e0b; }
+    .card img { width: 100px; height: 100px; }
+    .card-info { text-align: center; }
+    .card-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #f59e0b;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 6px;
+    }
+    .card-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 6px;
+    }
+    .card-desc {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    .sizes {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .sizes img { width: 40px; height: 40px; }
+    .sizes img.sm { width: 24px; height: 24px; }
+    .sizes img.xs { width: 16px; height: 16px; }
+    .sizes-label {
+      font-size: 10px;
+      color: #475569;
+      text-align: center;
+      margin-top: 8px;
+    }
+    .section-sizes {
+      max-width: 860px;
+      margin: 40px auto 0;
+      border-top: 1px solid #1e293b;
+      padding-top: 32px;
+    }
+    .section-sizes h2 {
+      font-size: 12px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .size-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .size-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .size-item span {
+      font-size: 10px;
+      color: #475569;
+    }
+    .on-light {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Fidco — Propositions Logo</h1>
+  <p class="sub">4 concepts · même charte dorée · F comme Fidco</p>
+
+  <div class="grid">
+
+    <!-- Option 1 -->
+    <div class="card">
+      <img src="/logo.svg" alt="Option 1"/>
+      <div class="card-info">
+        <div class="card-num">Option 1</div>
+        <div class="card-name">Carré arrondi</div>
+        <div class="card-desc">Moderne, format app. F + étoile fidélité en bas à droite.</div>
+      </div>
+    </div>
+
+    <!-- Option 2 -->
+    <div class="card">
+      <img src="/logo-v2.svg" alt="Option 2"/>
+      <div class="card-info">
+        <div class="card-num">Option 2</div>
+        <div class="card-name">Cercle</div>
+        <div class="card-desc">Classique, premium. Médaille ou tampon de fidélité.</div>
+      </div>
+    </div>
+
+    <!-- Option 3 -->
+    <div class="card">
+      <img src="/logo-v3.svg" alt="Option 3"/>
+      <div class="card-info">
+        <div class="card-num">Option 3</div>
+        <div class="card-name">Losange</div>
+        <div class="card-desc">Luxe, bijouterie. Rappelle un diamant ou une récompense rare.</div>
+      </div>
+    </div>
+
+    <!-- Option 4 -->
+    <div class="card">
+      <img src="/logo-v4.svg" alt="Option 4"/>
+      <div class="card-info">
+        <div class="card-num">Option 4</div>
+        <div class="card-name">Hexagone</div>
+        <div class="card-desc">Structuré, tech. Rappelle un sceau ou un badge d'expert.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Rendu petite taille -->
+  <div class="section-sizes">
+    <h2>Rendu à petite taille (navbar, favicon…)</h2>
+    <div class="size-row">
+      <div class="size-item">
+        <img src="/logo.svg" style="width:64px;height:64px;"/>
+        <span>64px — opt. 1</span>
+      </div>
+      <div class="size-item">
+        <img src="/logo-v2.svg" style="width:64px;height:64px;"/>
+        <span>64px — opt. 2</span>
+      </div>
+      <div class="size-item">
+        <img src="/logo-v3.svg" style="width:64px;height:64px;"/>
+        <span>64px — opt. 3</span>
+      </div>
+      <div class="size-item">
+        <img src="/logo-v4.svg" style="width:64px;height:64px;"/>
+        <span>64px — opt. 4</span>
+      </div>
+    </div>
+
+    <div class="size-row" style="margin-top:24px;">
+      <div class="size-item">
+        <img src="/logo.svg" style="width:28px;height:28px;"/>
+        <span>28px — opt. 1</span>
+      </div>
+      <div class="size-item">
+        <img src="/logo-v2.svg" style="width:28px;height:28px;"/>
+        <span>28px — opt. 2</span>
+      </div>
+      <div class="size-item">
+        <img src="/logo-v3.svg" style="width:28px;height:28px;"/>
+        <span>28px — opt. 3</span>
+      </div>
+      <div class="size-item">
+        <img src="/logo-v4.svg" style="width:28px;height:28px;"/>
+        <span>28px — opt. 4</span>
+      </div>
+    </div>
+
+    <div class="size-row" style="margin-top:24px;">
+      <div class="size-item">
+        <div class="on-light"><img src="/logo.svg" style="width:32px;height:32px;"/></div>
+        <span>fond clair — opt. 1</span>
+      </div>
+      <div class="size-item">
+        <div class="on-light"><img src="/logo-v2.svg" style="width:32px;height:32px;"/></div>
+        <span>fond clair — opt. 2</span>
+      </div>
+      <div class="size-item">
+        <div class="on-light"><img src="/logo-v3.svg" style="width:32px;height:32px;"/></div>
+        <span>fond clair — opt. 3</span>
+      </div>
+      <div class="size-item">
+        <div class="on-light"><img src="/logo-v4.svg" style="width:32px;height:32px;"/></div>
+        <span>fond clair — opt. 4</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
