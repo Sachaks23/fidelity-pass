@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import SubscribeButton from "@/components/SubscribeButton";
-import { PLANS } from "@/lib/stripe";
+import { PLANS } from "@/lib/plans";
 
 const gratuitFeatures = [
   { text: "Jusqu'à 30 clients", included: true },
