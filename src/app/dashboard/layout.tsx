@@ -107,6 +107,13 @@ function Icon({ name, className = "w-4 h-4" }: { name: string; className?: strin
         <polyline points="9 18 15 12 9 6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
+    borne: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+        <rect x="5" y="2" width="14" height="20" rx="2" />
+        <line x1="9" y1="18" x2="15" y2="18" strokeLinecap="round" />
+        <rect x="8" y="6" width="8" height="7" rx="1" />
+      </svg>
+    ),
   };
   return <>{icons[name] || null}</>;
 }
@@ -115,6 +122,7 @@ const navItems = [
   { href: "/dashboard", label: "Vue d'ensemble", icon: "dashboard", exact: true },
   { href: "/dashboard/clients", label: "Clients", icon: "users" },
   { href: "/dashboard/scanner", label: "Scanner", icon: "scan" },
+  { href: "/dashboard/borne", label: "Mode Borne", icon: "borne" },
   { href: "/dashboard/carte", label: "Ma carte", icon: "card" },
   { href: "/dashboard/recompenses", label: "Récompenses", icon: "gift" },
   { href: "/dashboard/campagnes", label: "Campagnes", icon: "megaphone" },
